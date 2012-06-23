@@ -1,0 +1,26 @@
+TextureCube skyboxTexture : register( t0 );
+SamplerState samplerLinear : register( s0 );
+
+cbuffer cb0: register (b0)
+{
+    matrix	viewproj;
+};
+
+cbuffer cb1: register (b1)
+{
+    matrix	world;
+};
+
+struct PS_INPUT
+{
+    float4 Pos : SV_POSITION;
+    float3 Tex : TEXCOORD0;
+};
+
+//--------------------------------------------------------------------------------------
+// Pixel Shader
+//--------------------------------------------------------------------------------------
+float4 ps_main(PS_INPUT input) : SV_Target
+{
+    return skyboxTexture.Sample(samplerLinear, input.Tex);
+}
