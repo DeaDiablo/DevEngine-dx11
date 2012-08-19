@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'qtoptions.ui'
 **
-** Created: Sat 9. Jun 16:29:27 2012
+** Created: Sun 15. Jul 22:08:29 2012
 **      by: Qt User Interface Compiler version 4.8.2
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!

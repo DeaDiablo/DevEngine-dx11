@@ -62,16 +62,26 @@ bool Shader::compileShaderFromFile(const wchar_t* fileName, const char* function
 //vertex shader
 VertexShader::VertexShader(const wchar_t* path, TypeVertexShader type, const char* fuction) :
   Shader(path, (DWORD)type, fuction),
-  _shader(NULL)
+  _shader(NULL),
+  _layout(NULL),
+  _bufferType(Buffer::BT_NONE)
 {
 }
 
 VertexShader::~VertexShader()
 {
+  _bufferType = Buffer::BT_NONE;
+
   if (_shader)
   {
     _shader->Release();
     _shader = NULL;
+  }
+  
+  if (_layout)
+  {
+    _layout->Release();
+    _layout = NULL;
   }
 }
 
@@ -123,12 +133,14 @@ bool VertexShader::supportTypeShader()
   return false;
 }
 
-void VertexShader::SetShader()
+bool VertexShader::SetShader()
 {
-  if (_shader)
-  {
-    DX_CONTEXT->VSSetShader(_shader, NULL, 0);
-  }
+  if (!_shader || !_layout)
+    return FALSE;
+  
+  DX_CONTEXT->VSSetShader(_shader, NULL, 0);
+  DX_CONTEXT->IASetInputLayout(_layout);
+  return TRUE;
 }
 
 bool VertexShader::CompileShader()
@@ -140,6 +152,7 @@ bool VertexShader::CompileShader()
 
   if (FAILED(hr))
   {
+    releaseBlob();
     Log::GetLog()->WriteToLog(L"Vertex shader not created.");
     return FALSE;
   }
@@ -147,31 +160,16 @@ bool VertexShader::CompileShader()
   return TRUE;
 }
 
-//layout
-Layout::Layout() :
-  _layout(NULL),
-  _type(Buffer::BT_NONE)
+bool VertexShader::CreateLaout(Buffer::BufferType BT_Type)
 {
-}
-
-Layout::~Layout()
-{
-  if (_layout)
-  {
-    _layout->Release();
-    _layout = NULL;
-  }
-}
-
-bool Layout::CreateLayout(Buffer::BufferType BT_Type, ID3DBlob*& blob)
-{
-  if (!blob)
+  if (!_blob)
     return FALSE;
-
-  HRESULT hr = DX_DEVICE->CreateInputLayout(Buffer::Declaration::GetLayout(BT_Type), Buffer::Declaration::GetSizeLayout(BT_Type), blob->GetBufferPointer(), blob->GetBufferSize(), &_layout);
   
-  blob->Release();
-  blob = NULL;
+  _bufferType = BT_Type;
+
+  HRESULT hr = DX_DEVICE->CreateInputLayout(Buffer::Declaration::GetLayout(_bufferType), Buffer::Declaration::GetSizeLayout(_bufferType), _blob->GetBufferPointer(), _blob->GetBufferSize(), &_layout);
+
+  releaseBlob();
 
   if (FAILED(hr))
   {
@@ -179,16 +177,9 @@ bool Layout::CreateLayout(Buffer::BufferType BT_Type, ID3DBlob*& blob)
     return FALSE;
   }
 
-  _type = BT_Type;
-
   return TRUE;
 }
 
-void Layout::SetLayout()
-{
-  if (_layout)
-    DX_CONTEXT->IASetInputLayout( _layout );
-}
 
 //pixel shader
 PixelShader::PixelShader(const wchar_t* path, TypePixelShader type, const char* fuction) :
@@ -254,12 +245,13 @@ bool PixelShader::supportTypeShader()
   return false;
 }
 
-void PixelShader::SetShader()
+bool PixelShader::SetShader()
 {
-  if (_shader)
-  {
-    DX_CONTEXT->PSSetShader(_shader, NULL, 0);
-  }
+  if (!_shader)
+    return FALSE;
+  
+  DX_CONTEXT->PSSetShader(_shader, NULL, 0);
+  return TRUE;
 }
 
 bool PixelShader::CompileShader()
@@ -278,4 +270,50 @@ bool PixelShader::CompileShader()
   }
 
   return TRUE;
+}
+
+ShaderPass::ShaderPass(UINT orderPass) :
+  _orderPass(orderPass),
+  _vShader(NULL),
+  _pShader(NULL),
+  _type(Buffer::BT_NONE)
+{
+}
+
+ShaderPass::~ShaderPass()
+{
+  DX->RemoveVertexShader(_vShader);
+  DX->RemovePixelShader(_pShader);
+}
+
+void ShaderPass::SetVertexShader(const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName)
+{
+  if (_vShader)
+    DX->RemoveVertexShader(_vShader);
+
+  _vShader = DX->GetVertexShader(path, type, funcName);
+
+  if (_type != Buffer::BT_NONE)
+    setLayout();
+}
+
+void ShaderPass::SetBufferType(Buffer::BufferType BT_Type)
+{
+  _type = BT_Type;
+
+  if (_vShader)
+    setLayout();
+}
+
+void ShaderPass::SetPixelShader(const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName)
+{
+  if (_pShader)
+    DX->RemovePixelShader(_pShader);
+  _pShader = DX->GetPixelShader(path, type, funcName);
+}
+
+void ShaderPass::setLayout()
+{
+  if (!_vShader->CreateLaout(_type))
+    _type = Buffer::BT_NONE;
 }

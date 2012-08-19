@@ -353,6 +353,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Element\DLight.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Element\DScene.cpp"
 				>
 			</File>
@@ -369,6 +373,10 @@
 				</File>
 				<File
 					RelativePath=".\include\Element\DGroup.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\Element\DLight.h"
 					>
 				</File>
 				<File
@@ -429,6 +437,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Input\DManipulatorMouse.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Input\DManipulatorWASD.cpp"
 				>
 			</File>
@@ -441,6 +453,10 @@
 				</File>
 				<File
 					RelativePath=".\include\Input\DManipulator.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\Input\DManipulatorMouse.h"
 					>
 				</File>
 				<File

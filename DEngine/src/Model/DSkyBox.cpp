@@ -55,9 +55,8 @@ SkyBox::SkyBox(const wchar_t* name, const wchar_t* texture) :
 
   SetVertices((LPVOID)arrayVertex, 24, Buffer::VB_POS);
   SetIndexes((LPVOID)arrayIndex, 36, Buffer::IB_16);
-  SetVertexShader(L"shaders/skybox.vs", VertexShader::VS_4_0, defaultVSfunction);
-  SetPixelShader(L"shaders/skybox.ps", PixelShader::PS_4_0, defaultPSfunction);
-  SetOrderNum(INT_MAX);
+  SetVertexShader(INT_MAX, L"shaders/skybox.vs", VertexShader::VS_4_0, defaultVSfunction);
+  SetPixelShader(INT_MAX, L"shaders/skybox.ps", PixelShader::PS_4_0, defaultPSfunction);
   SetTexture(texture);
 }
 

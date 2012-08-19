@@ -1,16 +1,16 @@
-#ifndef DEV_MANIPULATOR_WASD_H
-#define DEV_MANIPULATOR_WASD_H
+#ifndef DEV_MANIPULATOR_MOUSE_H
+#define DEV_MANIPULATOR_MOUSE_H
 
 #include <Input/DManipulator.h>
 
 namespace dev
 {
-  class ManipulatorWASD :
+  class ManipulatorMouse :
     public Manipulator
   {
   public:
-    ManipulatorWASD(std::wstring name);
-    virtual ~ManipulatorWASD();
+    ManipulatorMouse(std::wstring name);
+    virtual ~ManipulatorMouse();
 
     virtual void Handle(const InputStruct& is, double deltaTime);
   };

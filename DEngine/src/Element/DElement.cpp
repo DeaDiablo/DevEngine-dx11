@@ -6,13 +6,10 @@
 using namespace dev;
 
 Element::Element(const Vec3& position, const Vec3& rotation, const Vec3& scale) :
-  _vShader(NULL),
-  _pShader(NULL),
-  _layout(NULL),
   _parent(NULL),
   _type(Buffer::BT_NONE)
 {
-  SetVisible(true);
+  SetVisible(TRUE);
   SetPosition(position);
   SetRotation(rotation);
   SetScale(scale);
@@ -21,25 +18,9 @@ Element::Element(const Vec3& position, const Vec3& rotation, const Vec3& scale) 
 
 Element::~Element()
 {
-  if (_vShader)
-  {
-    DX->RemoveVertexShader(_vShader);
-    _vShader = NULL;
-  }
-
-  if (_layout)
-  {
-    DX->RemoveLayout(_layout);
-    _layout = NULL;
-  }
-
-  if (_pShader)
-  {
-    DX->RemovePixelShader(_pShader);
-    _pShader = NULL;
-  }
-
   Buffer::WorldConstBuffer::Unregister();
+  for(ShaderPassMap::iterator i = _shaderPasses.begin(); i != _shaderPasses.end(); ++i)
+    delete (*i).second;
 }
 
 void Element::SetVisible(bool value)
@@ -90,44 +71,36 @@ void Element::SetRotation(const Vec3& value)
 void Element::SetParent(Element* parent)
 {
   _parent = parent;
+
+  updateParent(UPDATE_BUFFER_TYPE);
 }
 
 void Element::ClearParent()
 {
   _parent = NULL;
+
+  updateParent(UPDATE_BUFFER_TYPE);
 }
 
-void Element::createLayout()
+void Element::SetVertexShader(UINT passNum, const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName)
 {
-  if (_layout)
-    DX->RemoveLayout(_layout);
+  if (_shaderPasses.find(passNum) == _shaderPasses.end())
+    _shaderPasses[passNum] = new ShaderPass(passNum);
+  
+  _shaderPasses[passNum]->SetVertexShader(path, type, funcName);
+  
+  if (_type != Buffer::BT_NONE)
+    _shaderPasses[passNum]->SetBufferType(_type);
 
-  if (_type != Buffer::BT_NONE && _type < Buffer::VB_POINTER && _vShader)
-    _layout = DX->GetLayout(_type, _vShader);
+  updateParent(UPDATE_BUFFER_TYPE);
 }
 
-void Element::SetVertexShader(const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName)
+void Element::SetPixelShader(UINT passNum, const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName)
 {
-  if (_vShader)
-    DX->RemoveVertexShader(_vShader);
-
-  _vShader = DX->GetVertexShader(path, type, funcName);
-
-  createLayout();
-}
-
-void Element::SetLayout(Buffer::BufferType BT_Type)
-{
-  _type = BT_Type;
-  Element::createLayout();
-}
-
-void Element::SetPixelShader(const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName)
-{
-  if (_pShader)
-    DX->RemovePixelShader(_pShader);
-
-  _pShader = DX->GetPixelShader(path, type, funcName);
+  if (_shaderPasses.find(passNum) == _shaderPasses.end())
+    _shaderPasses[passNum] = new ShaderPass(passNum);
+  
+  _shaderPasses[passNum]->SetPixelShader(path, type, funcName);
 }
 
 void Element::Update(const Matrix& matrix)
@@ -149,6 +122,17 @@ void Element::DrawElement()
   returnParameters();
 }
 
+void Element::setBufferType(Buffer::BufferType BT_Type)
+{
+  if (_type == BT_Type)
+    return;
+
+  _type = BT_Type;
+  
+  for(ShaderPassMap::iterator i = _shaderPasses.begin(); i != _shaderPasses.end(); ++i)
+    (*i).second->SetBufferType(BT_Type);
+}
+
 void Element::draw()
 {
 }
@@ -160,4 +144,10 @@ void Element::updateParameters()
 
 void Element::returnParameters()
 {
+}
+
+void Element::updateParent(Message msg)
+{
+  if (_parent)
+    _parent->updateParent(msg);
 }

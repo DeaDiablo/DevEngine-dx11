@@ -8,8 +8,7 @@ Mesh::Mesh(const wchar_t* name, const Vec3& position, const Vec3& rotation, cons
   Element(position, rotation, scale),
   _name(name),
   _vertices(NULL),
-  _indexes(NULL),
-  _orderNum(defaultOrderNum)
+  _indexes(NULL)
   //_material(NULL)
 {
   dirtyTextures();
@@ -20,8 +19,7 @@ Mesh::Mesh(const wchar_t* name) :
   Element(),
   _name(name),
   _vertices(NULL),
-  _indexes(NULL),
-  _orderNum(defaultOrderNum)
+  _indexes(NULL)
   //_material(NULL)
 {
   dirtyTextures();
@@ -53,7 +51,7 @@ Mesh::~Mesh()
 void Mesh::SetVertices(LPVOID vertices, int numberVertex, Buffer::BufferType BT_Type)
 {
   _vertices = new Buffer::VertexBuffer(vertices, numberVertex, BT_Type);
-  SetLayout(BT_Type);
+  setBufferType(BT_Type);
 }
 
 void Mesh::SetIndexes(LPVOID indexes, int numberIndexes, Buffer::BufferType BT_Type)

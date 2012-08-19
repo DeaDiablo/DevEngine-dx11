@@ -81,42 +81,32 @@ namespace dev
       return NULL;
     }
 
-    virtual void SetVertexShader(const wchar_t* path, VertexShader::TypeVertexShader type = VertexShader::VS_4_0, const char* funcName = defaultVSfunction);
-    inline VertexShader* GetVertexShader() const
+    virtual void SetVertexShader(UINT passNum, const wchar_t* path, VertexShader::TypeVertexShader type = VertexShader::VS_4_0, const char* funcName = defaultVSfunction);
+    virtual void SetPixelShader(UINT passNum, const wchar_t* path, PixelShader::TypePixelShader type = PixelShader::PS_4_0, const char* funcName = defaultPSfunction);
+
+    Buffer::BufferType GetBufferType() const
     {
-      if (_vShader)
-        return _vShader;
-      if (_parent)
-        return _parent->GetVertexShader();
-      return NULL;
+      return _type;   
     }
 
-    virtual void SetLayout(Buffer::BufferType BT_Type);
-    inline Layout* GetLayout() const
-    {
-      if (_layout)
-        return _layout;
-      if (_parent)
-        return _parent->GetLayout();
-      return NULL;
-    }
-
-    virtual void SetPixelShader(const wchar_t* path, PixelShader::TypePixelShader type = PixelShader::PS_4_0, const char* funcName = defaultPSfunction);
-    inline PixelShader* GetPixelShader() const
-    {
-      if (_pShader)
-        return _pShader;
-      if (_parent)
-        return _parent->GetPixelShader();
-      return NULL;
+    inline ShaderPassMap GetShaderPasses() 
+    { 
+      return _shaderPasses; 
     }
 
   protected:
+    
+    enum Message
+    {
+      UPDATE_BUFFER_TYPE = 0
+    };
+    virtual void updateParent(Message msg);
+
+    virtual void setBufferType(Buffer::BufferType BT_Type);
+
     virtual void updateParameters();
     virtual void draw();
     virtual void returnParameters();
-
-    virtual void createLayout();
 
     Properties::Property<bool> _visible;
     Properties::Property<Vec3> _position;
@@ -126,17 +116,16 @@ namespace dev
     Matrix              _matrix;
     Element*            _parent;
 
-    VertexShader*       _vShader;
-    Layout*             _layout;
-    PixelShader*        _pShader;
+    ShaderPassMap       _shaderPasses;
+    bool                _protectedShader;
 
-    Buffer::ConstantBuffer* _wBuffer;
     Buffer::BufferType      _type;
+    Buffer::ConstantBuffer* _wBuffer;
 
     friend Group;
   };
 
-  typedef std::vector<Element*> ElementList;
+  typedef std::vector<Element*> ElementVec;
 }
 
 #endif

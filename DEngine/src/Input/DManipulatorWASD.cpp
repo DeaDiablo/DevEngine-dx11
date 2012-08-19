@@ -3,9 +3,7 @@
 using namespace dev;
 
 ManipulatorWASD::ManipulatorWASD(std::wstring name) :
-  Manipulator(name),
-  _mouseX(0),
-  _mouseY(0)
+  Manipulator(name)
 {
 }
 
@@ -18,18 +16,11 @@ void ManipulatorWASD::Handle(const InputStruct& is, double deltaTime)
   if (!_camera)
     return;
 
-  float dx = ToRadian(is.mouseAxis.x);
-  float dy = ToRadian(is.mouseAxis.y);
-  _mouseX += dx * _sens;
-  _mouseY += dy * _sens;
-  if (_mouseY > PI_2 - Degree * 0.1f)
-    _mouseY = PI_2 - Degree * 0.1f;
-  if (_mouseY < -PI_2 + Degree *  0.1f)
-    _mouseY = -PI_2 + Degree *  0.1f;
-  float mouseZ = ToRadian(is.mouseAxis.z);
+  float dx = ToRadian(is.mouseAxis.x) * _sens;
+  float dy = ToRadian(is.mouseAxis.y) * _sens;
 
   if (fabs(dx) > FLT_EPSILON || fabs(dy) > FLT_EPSILON)
-    _camera->SetDirection(dev::Matrix::Rotate(_mouseY, _mouseX, 0) * dev::Vec3(0, 0, 1));
+    _camera->ChangeDirection(dx, dy, 0);
 
   Vec3 vec(0,0,0);
   if (is.GetKeyPressed(SC_W))
@@ -37,9 +28,9 @@ void ManipulatorWASD::Handle(const InputStruct& is, double deltaTime)
   if (is.GetKeyPressed(SC_S))
     vec -= _camera->GetDirection();
   if (is.GetKeyPressed(SC_D))
-    vec += _camera->GetRight();
+    vec += _camera->GetXLocal();
   if (is.GetKeyPressed(SC_A))
-    vec -= _camera->GetRight();
+    vec -= _camera->GetXLocal();
   if (is.GetKeyPressed(SC_Q))
     vec += _camera->GetUp();
   if (is.GetKeyPressed(SC_Z))
@@ -47,5 +38,5 @@ void ManipulatorWASD::Handle(const InputStruct& is, double deltaTime)
 
   vec.Normalize();
   if (vec != dev::Vec3(0, 0, 0))
-    _camera->SetMove(vec * _speed * (float)deltaTime);
+    _camera->SetMoveAndLook(vec * _speed * (float)deltaTime);
 }

@@ -21,6 +21,9 @@ namespace dev
     void SetMove(const float& x, const float& y, const float& z);
     void SetMove(const Vec3& value);
 
+    void SetMoveAndLook(const float& x, const float& y, const float& z);
+    void SetMoveAndLook(const Vec3& value);
+
     void SetPosition(const float& x, const float& y, const float& z);
     void SetPosition(const Vec3& value);
     inline const Vec3& GetPosition() const
@@ -34,6 +37,10 @@ namespace dev
     {
       return _look();
     }
+    inline const float& GetLengthLook() const
+    {
+      return _lengthLook;
+    }
 
     void SetUp(const float& x, const float& y, const float& z);
     void SetUp(const Vec3& value);
@@ -42,17 +49,30 @@ namespace dev
       return _up();
     }
 
+    inline const Vec3& GetZLocal() const
+    {
+      return _zLocal;
+    }
+
+    inline const Vec3& GetXLocal() const
+    {
+      return _xLocal;
+    }
+
+    inline const Vec3& GetYLocal() const
+    {
+      return _yLocal;
+    }
+
     void SetDirection(const float& x, const float& y, const float& z);
     void SetDirection(const Vec3& value);
-    inline const Vec3& GetDirection() const
+    inline const Vec3& GetDirection() const 
     {
       return _direction;
     }
 
-    inline const Vec3& GetRight() const
-    {
-      return _right;
-    }
+    void ChangeDirection(const float& yaw, const float& pitch, const float& roll);
+    void ChangeDirection(const Vec3& value);
 
     void SetNewProjection(float fovY, float aspect, float znear, float zfar);
     inline float GetFovYProjection() const
@@ -106,7 +126,9 @@ namespace dev
     Properties::Property<Vec3>   _up;
 
     Vec3   _direction;
-    Vec3   _right;
+    float  _lengthLook;
+
+    Vec3   _xLocal, _yLocal, _zLocal;
 
     Manipulator* _manipulator;
   };

@@ -1,5 +1,8 @@
 #include <Element/DScene.h>
 
+#include <Model/DMesh.h>
+#include <Element/DGroup.h>
+#include <Element/DCamera.h>
 #include <Math/DMatrix.h>
 #include <DX/DirectX.h>
 
@@ -45,7 +48,7 @@ void Scene::AddElement(Element* element)
 
 void Scene::RemoveElement(Element* element)
 {
-  for (ElementList::iterator i = _listUpdate.begin(); i != _listUpdate.end(); ++i)
+  for (ElementVec::iterator i = _listUpdate.begin(); i != _listUpdate.end(); ++i)
     if ((*i) == element)
       _listUpdate.erase(i);
 
@@ -57,7 +60,7 @@ void Scene::Update()
   if (_cameraActive)
     _cameraActive->Update();
 
-  for (ElementList::iterator i = _listUpdate.begin(); i != _listUpdate.end(); ++i)
+  for (ElementVec::iterator i = _listUpdate.begin(); i != _listUpdate.end(); ++i)
     (*i)->Update(_matrix);
 }
 
@@ -68,27 +71,28 @@ void Scene::Draw(bool vSync)
 
   DX->ClearFrame();
 
-  for (drawVec::iterator i = _drawMesh.begin(); i != _drawMesh.end(); ++i)
+  for (DrawStructVec::iterator i = _drawVec.begin(); i != _drawVec.end(); ++i)
   {
-    drawStruct& m = (*i);
+    DrawStruct& ds = (*i);
     
-    if(_currentVS != m.vs)
+    if(_currentVS != ds.vs)
     {
-      m.vs->SetShader();
-      m.layout->SetLayout();
+      if (!ds.vs->SetShader())
+        continue;
       _vpBuffer->SetAsVSSource(0);
       _wBuffer->SetAsVSSource(1);
 
-      _currentVS = m.vs;
+      _currentVS = ds.vs;
     }
 
-    if(_currentPS != m.ps)
+    if(_currentPS != ds.ps)
     {
-      m.ps->SetShader();
-      _currentPS = m.ps;
+      if (!ds.ps->SetShader())
+        continue;
+      _currentPS = ds.ps;
     }
 
-    m.mesh->DrawElement();
+    ds.element->DrawElement();
   }
 
   DX->Present(vSync);
@@ -96,87 +100,78 @@ void Scene::Draw(bool vSync)
 
 void Scene::addElement(Element* element)
 {
-  Group* group = element->AsGroup();
-  if (group)
-  {
-    for(UINT i = 0; i < group->GetSize(); i++)
-      addElement(group->GetElement(i));
+  if (!element)
     return;
-  }
 
-  Mesh* mesh = element->AsMesh();
-  if (mesh)
+  ShaderPassMap shaderPasses = element->GetShaderPasses();
+  if (shaderPasses.empty())
+    return;
+
+  for (ShaderPassMap::iterator i = shaderPasses.begin(); i != shaderPasses.end(); ++i)
   {
-    drawStruct newMesh;
-    newMesh.mesh = mesh;
-    newMesh.vs = mesh->GetVertexShader();
-    newMesh.ps = mesh->GetPixelShader();
-    newMesh.layout = mesh->GetLayout();
-    
-    for (drawVec::iterator i = _drawMesh.begin(); i != _drawMesh.end(); ++i)
+    DrawStruct newElement;
+    newElement.element  = element;
+    newElement.orderNum = (*i).second->GetOrderPass();
+    newElement.vs       = (*i).second->GetVertexShader();
+    newElement.ps       = (*i).second->GetPixelShader();
+
+    for (DrawStructVec::iterator i = _drawVec.begin(); i != _drawVec.end(); ++i)
     {
-      drawStruct& m = (*i);
-      if (m.mesh->GetOrderNum() >= mesh->GetOrderNum())
+      DrawStruct& ds = (*i);
+      if (ds.orderNum >= newElement.orderNum)
       {
-        if (m.mesh->GetOrderNum() == mesh->GetOrderNum())
+        if (ds.orderNum == newElement.orderNum)
         {
-          if (m.ps <= newMesh.ps)
+          if (ds.ps <= newElement.ps)
           {
-            if (m.ps == newMesh.ps)
+            if (ds.ps == newElement.ps)
             {
-              if (m.vs <= newMesh.vs)
+              if (ds.vs <= newElement.vs)
               {
-                if (m.vs == newMesh.vs)
+                if (ds.vs == newElement.vs)
                 {
-                  if ((m.mesh->GetPosition() - _cameraActive->GetPosition()).Length() >= 
-                      (mesh->GetPosition() - _cameraActive->GetPosition()).Length())
+                  if ((ds.element->GetPosition() - _cameraActive->GetPosition()).Length() >= 
+                    (element->GetPosition() - _cameraActive->GetPosition()).Length())
                   {
-                    _drawMesh.insert(i, newMesh);
+                    _drawVec.insert(i, newElement);
                     return;
                   }
                 }
                 else
                 {
-                  _drawMesh.insert(i, newMesh);
+                  _drawVec.insert(i, newElement);
                   return;
                 }
               }
             }
             else
             {
-              _drawMesh.insert(i, newMesh);
+              _drawVec.insert(i, newElement);
               return;
             }
           }
         }
         else
         {
-          _drawMesh.insert(i, newMesh);
+          _drawVec.insert(i, newElement);
           return;
         }
       }
     }
-
-    _drawMesh.push_back(newMesh);
+    _drawVec.push_back(newElement);
   }
 }
 
 void Scene::removeElement(Element* element)
 {
-  Group* group = element->AsGroup();
-  if (group)
-  {
-    for(UINT i = 0; i < group->GetSize(); i++)
-      removeElement(group->GetElement(i));
+  if (!element)
     return;
-  }
 
-  Mesh* mesh = element->AsMesh();
-  if (mesh)
-  {
-    for (drawVec::iterator i = _drawMesh.begin(); i != _drawMesh.end(); ++i)
-      if ((*i).mesh == mesh)
-        _drawMesh.erase(i);
-  }
+  for (DrawStructVec::iterator i = _drawVec.begin(); i != _drawVec.end(); ++i)
+    if ((*i).element == element)
+    {
+      _drawVec.erase(i);
+      return;
+    }
 }
 

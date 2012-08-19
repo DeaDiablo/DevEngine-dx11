@@ -7,6 +7,7 @@
 #include <Model/DSkyBox.h>
 #include <Element/DCamera.h>
 #include <Input/DManipulatorWASD.h>
+#include <Input/DManipulatorMouse.h>
 
 using namespace dev;
 
@@ -45,14 +46,14 @@ bool QRenderWidget::InitRender(int width, int height, int RefreshHz, bool FullSc
   }
   _initRender = TRUE;
   
-  ManipulatorWASD* man = new ManipulatorWASD(L"mans");
-  Camera* cam = new Camera();
+  ManipulatorMouse* man = new ManipulatorMouse(L"mans");
+  Camera* cam = new Camera(Vec3(-50, 150, -150), Vec3(0, 0, 0), Vec3(0, 1, 0));
   cam->SetManipulator(man);
   _render->RegisterOutputClass(man);
   Scene* scene = new Scene(cam);
   Model* mesh = new Model(L"model.dfm");
-  mesh->SetVertexShader(L"Tutorial03.fx");
-  mesh->SetPixelShader(L"Tutorial03.fx");
+  mesh->SetVertexShader(0, L"Tutorial03.fx");
+  mesh->SetPixelShader(0, L"Tutorial03.fx");
   mesh->GetMeshByNum(0)->SetTexture(L"texture.bmp");
 
   SkyBox* sb = new SkyBox(L"skyBox", L"city.dds");

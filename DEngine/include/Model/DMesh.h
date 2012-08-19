@@ -41,15 +41,6 @@ namespace dev
       return _name.c_str();
     }
 
-    inline void SetOrderNum(int num)
-    {
-      _orderNum = num;
-    }
-    inline int GetOrderNum() const
-    {
-      return _orderNum;
-    }
-
   protected:
     virtual void updateParameters();
     virtual void draw();
@@ -58,7 +49,6 @@ namespace dev
     void dirtyTextures();
 
     std::wstring            _name;
-    int                     _orderNum;
 
     Buffer::VertexBuffer*   _vertices;
     Buffer::IndexBuffer*    _indexes;

@@ -331,12 +331,6 @@ void DirectXClass::destroyShaderManager()
     delete (*i).second;
   }
 
-  for(LayoutMap::iterator i = _layouts.begin(); i != _layouts.end(); ++i)
-  {
-    delete (*i).second->layout;
-    delete (*i).second;
-  }
-
   for(ShaderMap::iterator i = _pixelShaders.begin(); i != _pixelShaders.end(); ++i)
   {
     delete (*i).second->pixelShader;
@@ -344,7 +338,6 @@ void DirectXClass::destroyShaderManager()
   }
 
   _vertexShaders.clear();
-  _layouts.clear();
   _pixelShaders.clear();
 }
 
@@ -369,30 +362,6 @@ VertexShader* DirectXClass::GetVertexShader(const wchar_t* path, VertexShader::T
 
   (*i).second->count++;
   return (*i).second->vertexShader;
-}
-
-
-Layout* DirectXClass::GetLayout(Buffer::BufferType BT_Type, VertexShader* vShader)
-{
-  LayoutMap::iterator i = _layouts.find(BT_Type);
-  if (i == _layouts.end())
-  {
-    _buffer = new ShaderStruct();
-    _buffer->layout = new Layout();
-    if (!_buffer->layout->CreateLayout(BT_Type, vShader->_blob))
-    {
-      delete _buffer->layout;
-      delete _buffer;
-      return NULL;
-    }
-    _buffer->count = 1;
-    _layouts[BT_Type] = _buffer;
-    return _buffer->layout;
-  }
-
-  vShader->releaseBlob();
-  (*i).second->count++;
-  return (*i).second->layout;
 }
 
 PixelShader* DirectXClass::GetPixelShader(const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName)
@@ -420,6 +389,9 @@ PixelShader* DirectXClass::GetPixelShader(const wchar_t* path, PixelShader::Type
 
 void DirectXClass::RemoveVertexShader(VertexShader* shader)
 {
+  if (!shader)
+    return;
+
   for (ShaderMap::iterator i = _vertexShaders.begin(); i != _vertexShaders.end(); ++i)
   {
     if ((*i).second->vertexShader == shader)
@@ -436,26 +408,11 @@ void DirectXClass::RemoveVertexShader(VertexShader* shader)
   }
 }
 
-void DirectXClass::RemoveLayout(Layout* layout)
-{
-  for (LayoutMap::iterator i = _layouts.begin(); i != _layouts.end(); ++i)
-  {
-    if ((*i).second->layout == layout)
-    {
-      (*i).second->count--;
-      if ((*i).second->count < 1)
-      {
-        delete (*i).second->layout;
-        delete (*i).second;
-        _layouts.erase(i);
-      }
-      return;
-    }
-  }
-}
-
 void DirectXClass::RemovePixelShader(PixelShader* shader)
 {
+  if (!shader)
+    return;
+
   for (ShaderMap::iterator i = _pixelShaders.begin(); i != _pixelShaders.end(); ++i)
   {
     if ((*i).second->pixelShader == shader)

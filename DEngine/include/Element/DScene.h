@@ -1,12 +1,13 @@
 #ifndef DEV_SCENE_H
 #define DEV_SCENE_H
 
-#include <Model/DMesh.h>
-#include <Element/DGroup.h>
-#include <Element/DCamera.h>
+#include <Element/DElement.h>
 
 namespace dev
 {
+  class Camera;
+  class Mesh;
+  
   class Scene
   {
   public:
@@ -30,7 +31,7 @@ namespace dev
     Camera* _cameraActive;
     
     Matrix      _matrix;
-    ElementList _listUpdate;
+    ElementVec  _listUpdate;
 
     VertexShader* _currentVS;
     PixelShader*  _currentPS;
@@ -38,15 +39,15 @@ namespace dev
     Buffer::ConstantBuffer* _wBuffer;
     Buffer::ConstantBuffer* _vpBuffer;
     
-    struct drawStruct
+    struct DrawStruct
     {
-      Mesh* mesh;
+      Element*      element;
+      UINT  orderNum;
       VertexShader* vs;
       PixelShader*  ps;
-      Layout* layout;
     };
-    typedef std::vector<drawStruct> drawVec;
-    drawVec _drawMesh;
+    typedef std::vector<DrawStruct> DrawStructVec;
+    DrawStructVec _drawVec;
   };
 }
 

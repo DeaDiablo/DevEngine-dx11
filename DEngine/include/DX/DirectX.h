@@ -92,11 +92,9 @@ namespace dev
     void destroyShaderManager();
 
     VertexShader* GetVertexShader(const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName);
-    Layout* GetLayout(Buffer::BufferType BT_Type, VertexShader* vShader);
     PixelShader* GetPixelShader(const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName);
 
     void RemoveVertexShader(VertexShader* shader);
-    void RemoveLayout(Layout* layout);
     void RemovePixelShader(PixelShader* shader);
 
   protected:
@@ -106,7 +104,6 @@ namespace dev
       {
         VertexShader* vertexShader;
         PixelShader* pixelShader;
-        Layout* layout;
       };
       UINT count;
     };

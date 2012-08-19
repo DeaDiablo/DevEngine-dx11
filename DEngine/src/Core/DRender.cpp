@@ -199,7 +199,7 @@ void Render::StopThread()
   if (_renderThread != INVALID_HANDLE_VALUE)
   {
     WaitForSingleObject(_renderThread, 10000);
-    CloseHandle(_renderThread);
+    TerminateThread(_renderThread, 0);
     _renderThread = INVALID_HANDLE_VALUE;
     _stopRender = FALSE;
   }

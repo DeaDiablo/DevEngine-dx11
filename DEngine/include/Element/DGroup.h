@@ -27,7 +27,7 @@ namespace dev
     {
       for (UINT i = 0; i < _elements.size(); ++i)
       {
-        if (_elements[i] == element) 
+        if (_elements[i] == element)
           return i;
       }
       return static_cast<UINT>(_elements.size());
@@ -41,6 +41,7 @@ namespace dev
     }
 
     virtual void Update(const Matrix& matrix);
+    virtual void DrawElement();
 
     virtual inline Group* AsGroup() 
     {
@@ -53,8 +54,9 @@ namespace dev
     }
 
   protected:
+    virtual void updateParent(Message msg);
     Element*    _element;
-    ElementList _elements;
+    ElementVec  _elements;
   };
 }
 

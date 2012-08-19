@@ -21,8 +21,8 @@ void main(HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int nCmdShow)
   render->RegisterOutputClass(man);
   Scene* scene = new Scene(cam);
   Model* mesh = new Model(L"model.dfm");
-  mesh->SetVertexShader(L"Tutorial03.fx");
-  mesh->SetPixelShader(L"Tutorial03.fx");
+  mesh->SetVertexShader(0, L"Tutorial03.fx");
+  mesh->SetPixelShader(0, L"Tutorial03.fx");
   mesh->GetMeshByNum(0)->SetTexture(L"texture.bmp");
 
   SkyBox* sb = new SkyBox(L"skyBox", L"city.dds");

@@ -16,7 +16,7 @@ Group::Group() :
 
 Group::~Group()
 {
-  for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i)
+  for (ElementVec::iterator i = _elements.begin(); i != _elements.end(); ++i)
     delete (*i);
   ClearList();
 }
@@ -100,7 +100,7 @@ void Group::RemoveElement(UINT num)
 
 void Group::RemoveAllElements()
 {
-  for (ElementList::iterator i = _elements.begin(); i != _elements.end(); ++i)
+  for (ElementVec::iterator i = _elements.begin(); i != _elements.end(); ++i)
   {
     (*i)->ClearParent();
     _elements.erase(i);
@@ -116,4 +116,33 @@ void Group::Update(const Matrix& matrix)
 
   for (UINT i = 0; i < _elements.size(); ++i)
     _elements[i]->Update(_matrix);
+}
+
+void Group::DrawElement()
+{
+  if (!_visible())
+    return;
+
+  for (UINT i = 0; i < _elements.size(); ++i)
+    _elements[i]->DrawElement();
+}
+
+void Group::updateParent(Message msg)
+{
+  switch(msg)
+  {
+  case UPDATE_BUFFER_TYPE:
+    {
+      for (ElementVec::iterator i = _elements.begin(); i != _elements.end(); ++i)
+      {
+        if ((*i)->GetShaderPasses().empty() && (*i)->GetBufferType() != Buffer::BT_NONE)
+        {
+          setBufferType((*i)->GetBufferType());
+          break;
+        }
+      }
+      break;
+    }
+  }
+  Element::updateParent(msg);
 }

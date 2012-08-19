@@ -118,7 +118,6 @@ bool Model::OpenFile(const wchar_t* path)
 
       mesh->SetVertices(buffer, _vNumber, typeVertex);
       delete[] buffer;
-      SetLayout(typeVertex);
     }
     
     //Read indexes
@@ -146,7 +145,6 @@ bool Model::OpenFile(const wchar_t* path)
 
       mesh->SetIndexes(buffer, _fNumber * 3, indexBufferType);
       delete[] buffer;
-
     } 
 
     AddElement(mesh);

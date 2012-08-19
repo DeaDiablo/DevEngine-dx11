@@ -7,9 +7,10 @@ namespace dev
   static const wchar_t*   logFilename          = L"DEngine.log";
   static const char*      defaultVSfunction    = "vs_main";
   static const char*      defaultPSfunction    = "ps_main";
-  static const UINT       defaultOrderNum      = 50;
   static const float      defaultSpeed         = 0.01f;
   static const float      defaultSens          = 0.1f;
+  static const float      defaultNear          = 0.01f;
+  static const float      defaultFar           = 25000.0f;
 }
 
 #endif
