@@ -50,9 +50,9 @@ namespace dev
     HANDLE    _renderThread;
     bool      _stopRender;
 
-    Input*              _input;
-    CriticalSection*    _cs;
-    int                 _frame;
+    Input              _input;
+    CriticalSection    _cs;
+    int                _frame;
 
     static void startRender(LPVOID param);
     void  runRender();

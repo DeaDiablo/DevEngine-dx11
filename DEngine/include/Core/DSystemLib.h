@@ -8,6 +8,10 @@
 
 namespace dev
 {
+  #define SYS_CS    SystemCS::Instance()
+  #define SYS_TIMER SystemTimer::Instance()
+  #define SYS_INPUT SystemInput::Instance()
+
   class SystemCS : public Singleton<CriticalSection>
   {};
 

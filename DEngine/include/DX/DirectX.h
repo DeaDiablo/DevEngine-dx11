@@ -11,9 +11,9 @@
 
 namespace dev
 {
-  #define DX          DirectX::Get()
-  #define DX_DEVICE   DirectX::Get()->GetDevice()
-  #define DX_CONTEXT  DirectX::Get()->GetContext()
+  #define DX          DirectX::Instance()
+  #define DX_DEVICE   DirectX::Instance().GetDevice()
+  #define DX_CONTEXT  DirectX::Instance().GetContext()
 
   class DirectXClass
   {

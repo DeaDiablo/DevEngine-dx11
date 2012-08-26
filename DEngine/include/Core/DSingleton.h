@@ -7,27 +7,12 @@ namespace dev
   class Singleton
   {
   public:
-    inline static T* Get()
+    inline static T& Instance()
     {
-      if(!_element)
-        _element = new T();
-      return _element;
+      static T instance;
+      return instance;
     }
-
-    inline static void Release()
-    { 
-      if(_element)
-      {
-        delete _element;
-        _element = 0;
-      }
-    }
-  private:
-    static T* _element;
   };
-  
-  template<class T>
-  T* Singleton<T>::_element = 0;
 }
 
 #endif

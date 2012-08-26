@@ -10,8 +10,6 @@ Render::Render(int width, int height) :
   _renderThread(INVALID_HANDLE_VALUE),
   _stopRender(FALSE),
   _scene(NULL),
-  _input(NULL),
-  _cs(NULL),
   _frame(0)
 {
   _wnd = new Window();
@@ -29,8 +27,6 @@ Render::Render(HWND hWnd) :
   _renderThread(INVALID_HANDLE_VALUE),
   _stopRender(FALSE),
   _scene(NULL),
-  _input(NULL),
-  _cs(NULL),
   _frame(0)
 {
 }
@@ -39,8 +35,6 @@ Render::Render(HINSTANCE hInstance, int PosX, int PosY, int Width, int Height) :
   _renderThread(INVALID_HANDLE_VALUE),
   _stopRender(FALSE),
   _scene(NULL),
-  _input(NULL),
-  _cs(NULL),
   _frame(0)
 {
   _wnd = new Window();
@@ -75,11 +69,6 @@ void Render::Destroy()
     _wnd = NULL;
   }
   _hWnd = NULL;
-
-  DirectX::Release();
-  SystemCS::Release();
-  SystemInput::Release();
-  SystemTimer::Release();
 }
 
 void Render::Release()
@@ -117,12 +106,12 @@ bool Render::InitRender(int width, int height, int RefreshHz, bool FullScreenMod
     }
   }
   
-  if (DX->InitDirectX(_hWnd, FullScreenMode, 1, width, height, RefreshHz))
+  if (DX.InitDirectX(_hWnd, FullScreenMode, 1, width, height, RefreshHz))
   {
-    _input  = SystemInput::Get();
-    _cs     = SystemCS::Get();
-    SystemTimer::Get()->Reset(1);
-    SystemTimer::Get()->Reset(2);
+    _input  = SYS_INPUT;
+    _cs     = SYS_CS;
+    SYS_TIMER.Reset(1);
+    SYS_TIMER.Reset(2);
     return TRUE;
   }
 
@@ -136,7 +125,7 @@ void Render::SetScene(Scene* scene)
 
 void Render::Run()
 {
-  if (!_hWnd || !DX->IsInitialized())
+  if (!_hWnd || !DX.IsInitialized())
     return;
 
   MSG msg = {0};
@@ -164,7 +153,7 @@ void Render::Frame()
    
   //show fps
   _frame++;
-  if (SystemTimer::Get()->GetEventTimeS(2, 1.0))
+  if (SYS_TIMER.GetEventTimeS(2, 1.0))
   {
     wchar_t label[255];
     swprintf_s(label, 255, L"FPS: %d", _frame);
@@ -176,20 +165,20 @@ void Render::Frame()
 
 void Render::OutputUpdate()
 {
-  InputStruct is = _input->GetInputStruct();
-  _cs->Lock();
+  InputStruct is = _input.GetInputStruct();
+  _cs.Lock();
   for(OCSet::iterator it = _outputs.begin(); it != _outputs.end(); ++it)
   {
     OutputClass* outputClass = (*it);
     if (outputClass->GetActive())
-      outputClass->Handle(is, SystemTimer::Get()->GetDeltaTimeMS(1));
+      outputClass->Handle(is, SYS_TIMER.GetDeltaTimeMS(1));
   }
-  _cs->UnLock();
+  _cs.UnLock();
 }
 
 void Render::RunThread()
 {
-  if (DX->IsInitialized())
+  if (DX.IsInitialized())
     _renderThread = (HANDLE)_beginthread(startRender, 0, (LPVOID)this);
 }
 
@@ -221,14 +210,14 @@ void Render::runRender()
 
 void Render::RegisterOutputClass(OutputClass* outputClass)
 {
-  _cs->Lock();
+  _cs.Lock();
   _outputs.insert(outputClass);
-  _cs->UnLock();
+  _cs.UnLock();
 }
 
 void Render::UnregisterOutputClass(OutputClass* outputClass)
 {
-  _cs->Lock();
+  _cs.Lock();
   _outputs.erase(outputClass);
-  _cs->UnLock();
+  _cs.UnLock();
 }

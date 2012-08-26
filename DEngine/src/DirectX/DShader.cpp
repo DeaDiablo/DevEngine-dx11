@@ -117,18 +117,18 @@ bool VertexShader::supportTypeShader()
   {
   case VS_1_1:
   case VS_2_0:
-    return DX->GetFeatureLevel() >= D3D_FEATURE_LEVEL_9_1;
+    return DX.GetFeatureLevel() >= D3D_FEATURE_LEVEL_9_1;
   case VS_2_A:
   case VS_2_SW:
   case VS_3_0:
   case VS_3_SW:
-    return DX->GetFeatureLevel() >= D3D_FEATURE_LEVEL_9_3;
+    return DX.GetFeatureLevel() >= D3D_FEATURE_LEVEL_9_3;
   case VS_4_0:
-    return DX->GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_0;
+    return DX.GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_0;
   case VS_4_1:
-    return DX->GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_1;
+    return DX.GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_1;
   case VS_5_0:
-    return DX->GetFeatureLevel() >= D3D_FEATURE_LEVEL_11_0;
+    return DX.GetFeatureLevel() >= D3D_FEATURE_LEVEL_11_0;
   }
   return false;
 }
@@ -228,19 +228,19 @@ bool PixelShader::supportTypeShader()
   switch(_type)
   {
   case PS_2_0:
-    return DX->GetFeatureLevel() >= D3D_FEATURE_LEVEL_9_1;
+    return DX.GetFeatureLevel() >= D3D_FEATURE_LEVEL_9_1;
   case PS_2_A:
   case PS_2_B:
   case PS_2_SW:
   case PS_3_0:
   case PS_3_SW:
-    return DX->GetFeatureLevel() >= D3D_FEATURE_LEVEL_9_3;
+    return DX.GetFeatureLevel() >= D3D_FEATURE_LEVEL_9_3;
   case PS_4_0:
-    return DX->GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_0;
+    return DX.GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_0;
   case PS_4_1:
-    return DX->GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_1;
+    return DX.GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_1;
   case PS_5_0:
-    return DX->GetFeatureLevel() >= D3D_FEATURE_LEVEL_11_0;
+    return DX.GetFeatureLevel() >= D3D_FEATURE_LEVEL_11_0;
   }
   return false;
 }
@@ -282,16 +282,16 @@ ShaderPass::ShaderPass(UINT orderPass) :
 
 ShaderPass::~ShaderPass()
 {
-  DX->RemoveVertexShader(_vShader);
-  DX->RemovePixelShader(_pShader);
+  DX.RemoveVertexShader(_vShader);
+  DX.RemovePixelShader(_pShader);
 }
 
 void ShaderPass::SetVertexShader(const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName)
 {
   if (_vShader)
-    DX->RemoveVertexShader(_vShader);
+    DX.RemoveVertexShader(_vShader);
 
-  _vShader = DX->GetVertexShader(path, type, funcName);
+  _vShader = DX.GetVertexShader(path, type, funcName);
 
   if (_type != Buffer::BT_NONE)
     setLayout();
@@ -308,8 +308,8 @@ void ShaderPass::SetBufferType(Buffer::BufferType BT_Type)
 void ShaderPass::SetPixelShader(const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName)
 {
   if (_pShader)
-    DX->RemovePixelShader(_pShader);
-  _pShader = DX->GetPixelShader(path, type, funcName);
+    DX.RemovePixelShader(_pShader);
+  _pShader = DX.GetPixelShader(path, type, funcName);
 }
 
 void ShaderPass::setLayout()

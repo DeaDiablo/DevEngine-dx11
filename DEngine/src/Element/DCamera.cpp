@@ -11,7 +11,7 @@ Camera::Camera() :
   SetPosition(Vec3(0, 10, -50));
   SetLook(Vec3(0, 0, 0));
   SetUp(Vec3(0, 1, 0));
-  SetNewProjection(PI_4, (float)DX->GetWidth()/DX->GetHeight(), defaultNear, defaultFar);
+  SetNewProjection(PI_4, (float)DX.GetWidth()/DX.GetHeight(), defaultNear, defaultFar);
   init();
 }
 
@@ -21,7 +21,7 @@ Camera::Camera(Vec3 position, Vec3 look, Vec3 up) :
   SetPosition(position);
   SetLook(look);
   SetUp(up);
-  SetNewProjection(PI_4, (float)DX->GetWidth()/DX->GetHeight(), defaultNear, defaultFar);
+  SetNewProjection(PI_4, (float)DX.GetWidth()/DX.GetHeight(), defaultNear, defaultFar);
   init();
 }
 

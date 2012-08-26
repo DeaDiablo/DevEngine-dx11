@@ -12,7 +12,7 @@ Mesh::Mesh(const wchar_t* name, const Vec3& position, const Vec3& rotation, cons
   //_material(NULL)
 {
   dirtyTextures();
-  _sampler = DX->GetSamplerState();
+  _sampler = DX.GetSamplerState();
 }
 
 Mesh::Mesh(const wchar_t* name) :
@@ -23,7 +23,7 @@ Mesh::Mesh(const wchar_t* name) :
   //_material(NULL)
 {
   dirtyTextures();
-  _sampler = DX->GetSamplerState();
+  _sampler = DX.GetSamplerState();
 }
 
 Mesh::~Mesh()
@@ -97,7 +97,7 @@ void Mesh::updateParameters()
   /*if (_material)
   {
     if (_pShader == NULL)
-      _deviceDX->SetMaterial(&_material->GetAsD3DMaterial());
+      _deviceDX.SetMaterial(&_material->GetAsD3DMaterial());
   }
 */
 }
@@ -105,7 +105,7 @@ void Mesh::updateParameters()
 void Mesh::returnParameters()
 {
   /*for(UINT i = 0; i < _textures.size(); i++)
-      _deviceDX->SetTexture(i, NULL);
+      _deviceDX.SetTexture(i, NULL);
   */
 }
 
@@ -115,7 +115,7 @@ void Mesh::RemoveTexture(const wchar_t* path)
   {
     if (!wcscmp((*i)->GetPath(), path))
     {
-      DX->RemoveTexture((*i)->GetPath());
+      DX.RemoveTexture((*i)->GetPath());
       _textures.erase(i);
     }
   }
@@ -127,12 +127,12 @@ void Mesh::SetTexture(const wchar_t* path)
     if (!wcscmp(_textures[i]->GetPath(), path))
       return;
 
-  _textures.push_back(DX->GetTexture(path));
+  _textures.push_back(DX.GetTexture(path));
 }
 
 void Mesh::dirtyTextures()
 {
   for (UINT i = 0; i < _textures.size(); i++)
-    DX->RemoveTexture(_textures[i]);
+    DX.RemoveTexture(_textures[i]);
   _textures.clear();
 }

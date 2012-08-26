@@ -69,7 +69,7 @@ void Scene::Draw(bool vSync)
   _currentVS = NULL;
   _currentPS = NULL;
 
-  DX->ClearFrame();
+  DX.ClearFrame();
 
   for (DrawStructVec::iterator i = _drawVec.begin(); i != _drawVec.end(); ++i)
   {
@@ -95,7 +95,7 @@ void Scene::Draw(bool vSync)
     ds.element->DrawElement();
   }
 
-  DX->Present(vSync);
+  DX.Present(vSync);
 }
 
 void Scene::addElement(Element* element)

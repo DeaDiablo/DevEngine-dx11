@@ -21,7 +21,7 @@ namespace dev
       if (_fileLog != INVALID_HANDLE_VALUE)
       {
         DWORD writedBytes;
-        int secs = (int)SystemTimer::Get()->GetTimeS(0);
+        int secs = (int)SYS_TIMER.GetTimeS(0);
         int mins = secs / 60;
         int hours = mins / 60;
         secs -= mins * 60;
@@ -38,7 +38,7 @@ namespace dev
     Log(const wchar_t* filename)
     {
       _fileLog = CreateFileW(filename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
-      SystemTimer::Get()->Reset(0);
+      SYS_TIMER.Reset(0);
     }
     virtual ~Log()
     {

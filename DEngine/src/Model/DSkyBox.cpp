@@ -6,7 +6,7 @@ using namespace dev;
 
 SkyBox::SkyBox(const wchar_t* name, const wchar_t* texture) :
   Mesh(name),
-  _skyDSState(DX->CreateDepthStencilState(TRUE, D3D11_DEPTH_WRITE_MASK_ALL, D3D11_COMPARISON_LESS_EQUAL)),
+  _skyDSState(DX.CreateDepthStencilState(TRUE, D3D11_DEPTH_WRITE_MASK_ALL, D3D11_COMPARISON_LESS_EQUAL)),
   _oldDSState(NULL),
   _camera(NULL)
 {
@@ -72,13 +72,13 @@ void SkyBox::SetCamera(Camera* camera)
 void SkyBox::updateParameters()
 {
   Mesh::updateParameters();
-  _oldDSState = DX->GetDepthStencilState();
-  DX->SetDepthStencilState(_skyDSState);
+  _oldDSState = DX.GetDepthStencilState();
+  DX.SetDepthStencilState(_skyDSState);
 }
 
 void SkyBox::returnParameters()
 {
-  DX->SetDepthStencilState(_oldDSState);
+  DX.SetDepthStencilState(_oldDSState);
   Mesh::returnParameters();
 }
 
