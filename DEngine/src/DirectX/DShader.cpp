@@ -9,7 +9,8 @@ Shader::Shader(const wchar_t* path, DWORD type, const char* functionName) :
   _blob(NULL),
   _path(path),
   _type(type),
-  _function(functionName)
+  _function(functionName),
+  _isCompiled(FALSE)
 {
 }
 
@@ -22,7 +23,7 @@ bool Shader::compileShaderFromFile(const wchar_t* fileName, const char* function
 {
   if (!supportTypeShader())
   {
-    Log::GetLog()->WriteToLog(L"Your videoadapter not supported this shader model");
+    WRITE_LOG(L"Your videoadapter not supported this shader model");
     return FALSE;
   }
 
@@ -37,17 +38,17 @@ bool Shader::compileShaderFromFile(const wchar_t* fileName, const char* function
   {
     std::wstring buffer = L"Shader not compiled: ";
     buffer += fileName;
-    Log::GetLog()->WriteToLog(buffer.c_str());
+    WRITE_LOG(buffer.c_str());
     if(pErrorBlob != NULL)
     {
       char* error = (char*)pErrorBlob->GetBufferPointer();
       UINT strLen = (UINT)strlen(error);
       wchar_t* wError = new wchar_t[strLen];
       MultiByteToWideChar(CP_ACP, 0, error, strLen, wError, strLen);
-      Log::GetLog()->WriteToLog(wError);
+      WRITE_LOG(wError);
     }
     else
-      Log::GetLog()->WriteToLog(L"Unknown error");
+      WRITE_LOG(L"Unknown error");
     if(pErrorBlob) 
       pErrorBlob->Release();
     return FALSE;
@@ -60,8 +61,8 @@ bool Shader::compileShaderFromFile(const wchar_t* fileName, const char* function
 }
 
 //vertex shader
-VertexShader::VertexShader(const wchar_t* path, TypeVertexShader type, const char* fuction) :
-  Shader(path, (DWORD)type, fuction),
+VertexShader::VertexShader(const wchar_t* path, TypeVertexShader type, const char* nameFunction) :
+  Shader(path, (DWORD)type, nameFunction),
   _shader(NULL),
   _layout(NULL),
   _bufferType(Buffer::BT_NONE)
@@ -153,10 +154,11 @@ bool VertexShader::CompileShader()
   if (FAILED(hr))
   {
     releaseBlob();
-    Log::GetLog()->WriteToLog(L"Vertex shader not created.");
+    WRITE_LOG(L"Vertex shader not created.");
     return FALSE;
   }
 
+  _isCompiled = TRUE;
   return TRUE;
 }
 
@@ -169,11 +171,9 @@ bool VertexShader::CreateLaout(Buffer::BufferType BT_Type)
 
   HRESULT hr = DX_DEVICE->CreateInputLayout(Buffer::Declaration::GetLayout(_bufferType), Buffer::Declaration::GetSizeLayout(_bufferType), _blob->GetBufferPointer(), _blob->GetBufferSize(), &_layout);
 
-  releaseBlob();
-
   if (FAILED(hr))
   {
-    Log::GetLog()->WriteToLog(L"Layout not created.");
+    WRITE_LOG(L"Layout not created.");
     return FALSE;
   }
 
@@ -182,10 +182,14 @@ bool VertexShader::CreateLaout(Buffer::BufferType BT_Type)
 
 
 //pixel shader
-PixelShader::PixelShader(const wchar_t* path, TypePixelShader type, const char* fuction) :
-  Shader(path, (DWORD)type, fuction),
+PixelShader::PixelShader(const wchar_t* path, TypePixelShader type, const char* nameFunction) :
+  Shader(path, (DWORD)type, nameFunction),
   _shader(NULL)
 {
+  ClearAllRenderTargets();
+  ClearResourcesRenderTarget();
+  SetScreenDepthStencil();
+  SetScreenRenderTarget(0);
 }
 
 PixelShader::~PixelShader()
@@ -249,8 +253,13 @@ bool PixelShader::SetShader()
 {
   if (!_shader)
     return FALSE;
-  
+
+  if (_numRTSlot > 0)
+    DX.SetRenderTargets(_numRTSlot, _renderTargets, _depthStencilView);
+  if (_numSRSlot > 0)
+    DX_CONTEXT->PSSetShaderResources(_startSRSlot, _numSRSlot, _shaderResources);
   DX_CONTEXT->PSSetShader(_shader, NULL, 0);
+
   return TRUE;
 }
 
@@ -265,11 +274,127 @@ bool PixelShader::CompileShader()
   
   if (FAILED(hr))
   {
-    Log::GetLog()->WriteToLog(L"Pixel shader not created.");
+    WRITE_LOG(L"Pixel shader not created.");
     return FALSE;
   }
 
+  _isCompiled = TRUE;
   return TRUE;
+}
+
+void PixelShader::SetScreenRenderTarget(int targetSlot)
+{
+  if (targetSlot < 0 || targetSlot >= MAX_RENDER_TARGETS)
+    return;
+
+  _renderTargets[targetSlot] = DX.CreateScreenRenderTarget();
+  updateNumRenderTargets();
+}
+
+void PixelShader::SetResourceRenderTarget(int targetSlot, int numTargetInDX, DXGI_FORMAT format)
+{
+  if (targetSlot < 0 || targetSlot >= MAX_RENDER_TARGETS)
+    return;
+
+  _renderTargets[targetSlot] = DX.CreateTextureRenderTarget(numTargetInDX, format);
+  updateNumRenderTargets();
+}
+
+void PixelShader::ClearRenderTarget(int targetSlot)
+{
+  if (targetSlot < 0 || targetSlot >= MAX_RENDER_TARGETS)
+    return;
+
+  if (!_renderTargets[targetSlot])
+    return;
+
+  _renderTargets[targetSlot] = NULL;
+  updateNumRenderTargets();
+}
+
+void PixelShader::ClearAllRenderTargets()
+{
+  for (int i = 0; i < MAX_RENDER_TARGETS; i++)
+    _renderTargets[i] = NULL;
+  _numRTSlot = 0;
+}
+
+void PixelShader::SetScreenDepthStencil()
+{
+  _depthStencilView = DX.CreateScreenDepthStencilView();
+}
+
+void PixelShader::SetDepthStencilTarget(int num)
+{
+  _depthStencilView = DX.CreateDepthStencilView(num);
+}
+
+void PixelShader::ClearDepthStencilTarget()
+{
+  _depthStencilView = NULL;
+}
+
+void PixelShader::updateNumRenderTargets()
+{
+  for(int i = MAX_RENDER_TARGETS - 1; i >= 0; i--)
+  {
+    if (_renderTargets[i] != NULL)
+    {
+      _numRTSlot = i + 1;
+      break;
+    }
+  }
+}
+
+void PixelShader::UseResourceRenderTarget(int resourceSlot, int numTargetInDX)
+{
+  if (resourceSlot < 0 || resourceSlot >= MAX_RENDER_TARGETS)
+    return;
+
+  _shaderResources[resourceSlot] = DX.GetShaderResourceRenderTarget(numTargetInDX);
+  updateNumShaderResources();
+}
+
+void PixelShader::ClearResourceRenderTarget(int resourceSlot)
+{
+  if (resourceSlot < 0 || resourceSlot >= MAX_RENDER_TARGETS)
+    return;
+
+  if (!_shaderResources[resourceSlot])
+    return;
+
+  _shaderResources[resourceSlot] = NULL;
+  updateNumShaderResources();
+}
+
+void PixelShader::ClearResourcesRenderTarget()
+{
+  for (int i = 0; i < MAX_SHADER_RESOURCES; i++)
+    _shaderResources[i] = NULL;
+
+  _startSRSlot = 0;
+  _numSRSlot = 0;
+}
+
+void PixelShader::updateNumShaderResources()
+{
+  for (int i = 0; i < MAX_SHADER_RESOURCES; i++)
+  {
+    if (_shaderResources[i] != NULL)
+    {
+      _startSRSlot = i;
+      break;
+    }
+  }
+
+  for(int i = MAX_SHADER_RESOURCES - 1; i >= _startSRSlot; i--)
+  {
+    if (_shaderResources[i] != NULL)
+    {
+      _numSRSlot = i - _startSRSlot + 1;
+      break;
+    }
+  }
 }
 
 ShaderPass::ShaderPass(UINT orderPass) :
@@ -282,19 +407,20 @@ ShaderPass::ShaderPass(UINT orderPass) :
 
 ShaderPass::~ShaderPass()
 {
-  DX.RemoveVertexShader(_vShader);
-  DX.RemovePixelShader(_pShader);
 }
 
 void ShaderPass::SetVertexShader(const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName)
 {
-  if (_vShader)
-    DX.RemoveVertexShader(_vShader);
-
   _vShader = DX.GetVertexShader(path, type, funcName);
 
   if (_type != Buffer::BT_NONE)
     setLayout();
+}
+
+void ShaderPass::SetVertexShader(VertexShader* vs)
+{
+  _vShader = vs;
+  DX.RegistrationVertexShader(vs);
 }
 
 void ShaderPass::SetBufferType(Buffer::BufferType BT_Type)
@@ -307,9 +433,13 @@ void ShaderPass::SetBufferType(Buffer::BufferType BT_Type)
 
 void ShaderPass::SetPixelShader(const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName)
 {
-  if (_pShader)
-    DX.RemovePixelShader(_pShader);
   _pShader = DX.GetPixelShader(path, type, funcName);
+}
+
+void ShaderPass::SetPixelShader(PixelShader* ps)
+{
+  _pShader = ps;
+  DX.RegistrationPixelShader(ps);
 }
 
 void ShaderPass::setLayout()

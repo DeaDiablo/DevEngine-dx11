@@ -95,12 +95,33 @@ void Element::SetVertexShader(UINT passNum, const wchar_t* path, VertexShader::T
   updateParent(UPDATE_BUFFER_TYPE);
 }
 
+void Element::SetVertexShader(UINT passNum, VertexShader* vs)
+{
+  if (_shaderPasses.find(passNum) == _shaderPasses.end())
+    _shaderPasses[passNum] = new ShaderPass(passNum);
+
+  _shaderPasses[passNum]->SetVertexShader(vs);
+
+  if (_type != Buffer::BT_NONE)
+    _shaderPasses[passNum]->SetBufferType(_type);
+
+  updateParent(UPDATE_BUFFER_TYPE);
+}
+
 void Element::SetPixelShader(UINT passNum, const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName)
 {
   if (_shaderPasses.find(passNum) == _shaderPasses.end())
     _shaderPasses[passNum] = new ShaderPass(passNum);
   
   _shaderPasses[passNum]->SetPixelShader(path, type, funcName);
+}
+
+void Element::SetPixelShader(UINT passNum, PixelShader* ps)
+{
+  if (_shaderPasses.find(passNum) == _shaderPasses.end())
+    _shaderPasses[passNum] = new ShaderPass(passNum);
+
+  _shaderPasses[passNum]->SetPixelShader(ps);
 }
 
 void Element::Update(const Matrix& matrix)

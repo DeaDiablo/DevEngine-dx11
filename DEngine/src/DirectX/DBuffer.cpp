@@ -196,13 +196,13 @@ void Buffer::SetBuffer(LPVOID src, UINT count, BufferType BT_Type)
     _data.pSysMem = src;
     if (FAILED(DX_DEVICE->CreateBuffer(&_bufferDesc, &_data, &_buffer)))
     {
-      Log::GetLog()->WriteToLog(L"Buffer not created (DVertex.cpp)");
+      WRITE_LOG(L"Buffer not created (DVertex.cpp)");
     }
   }
   else
     if (FAILED(DX_DEVICE->CreateBuffer(&_bufferDesc, NULL, &_buffer)))
     {
-      Log::GetLog()->WriteToLog(L"Buffer not created (DVertex.cpp)");
+      WRITE_LOG(L"Buffer not created (DVertex.cpp)");
     }
 }
 

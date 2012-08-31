@@ -13,7 +13,7 @@ Texture::Texture(const wchar_t* path) :
   {
     std::wstring buf(L"Texture not loaded: ");
     buf += path;
-    Log::GetLog()->WriteToLog(buf.c_str());
+    WRITE_LOG(buf.c_str());
     destroy();
   }
 }

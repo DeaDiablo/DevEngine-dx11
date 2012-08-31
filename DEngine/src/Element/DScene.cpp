@@ -66,10 +66,11 @@ void Scene::Update()
 
 void Scene::Draw(bool vSync)
 {
-  _currentVS = NULL;
-  _currentPS = NULL;
+  //_currentVS = NULL;
+  //_currentPS = NULL;
 
-  DX.ClearFrame();
+  DX.ClearAllRenderTargets();
+  DX.ClearAllDepthStencil();
 
   for (DrawStructVec::iterator i = _drawVec.begin(); i != _drawVec.end(); ++i)
   {

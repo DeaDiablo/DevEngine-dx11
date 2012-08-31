@@ -82,7 +82,9 @@ namespace dev
     }
 
     virtual void SetVertexShader(UINT passNum, const wchar_t* path, VertexShader::TypeVertexShader type = VertexShader::VS_4_0, const char* funcName = defaultVSfunction);
+    virtual void SetVertexShader(UINT passNum, VertexShader* vs);
     virtual void SetPixelShader(UINT passNum, const wchar_t* path, PixelShader::TypePixelShader type = PixelShader::PS_4_0, const char* funcName = defaultPSfunction);
+    virtual void SetPixelShader(UINT passNum, PixelShader* ps);
 
     Buffer::BufferType GetBufferType() const
     {
@@ -91,7 +93,26 @@ namespace dev
 
     inline ShaderPassMap GetShaderPasses() 
     { 
-      return _shaderPasses; 
+      return _shaderPasses;
+    }
+
+    inline ShaderPass* GetShaderPass(UINT passNum) 
+    { 
+      return _shaderPasses[passNum]; 
+    }
+
+    inline VertexShader* GetVertexShader(UINT passNum) 
+    { 
+      if (_shaderPasses.find(passNum) != _shaderPasses.end())
+        return _shaderPasses[passNum]->GetVertexShader(); 
+      return NULL;
+    }
+
+    inline PixelShader* GetPixelShader(UINT passNum) 
+    { 
+      if (_shaderPasses.find(passNum) != _shaderPasses.end())
+        return _shaderPasses[passNum]->GetPixelShader(); 
+      return NULL;
     }
 
   protected:

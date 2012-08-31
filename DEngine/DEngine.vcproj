@@ -487,6 +487,18 @@
 					RelativePath=".\include\Model\DMesh.h"
 					>
 				</File>
+				<Filter
+					Name="Plain"
+					>
+					<File
+						RelativePath=".\src\Model\DPlane.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\include\Model\DPlane.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="SkyBox"

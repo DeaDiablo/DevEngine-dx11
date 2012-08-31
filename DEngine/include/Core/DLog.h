@@ -7,6 +7,8 @@
 
 namespace dev
 {
+  #define WRITE_LOG(text) Log::GetLog()->WriteToLog((text))
+
   class Log
   {
   public:

@@ -50,12 +50,16 @@ Mesh::~Mesh()
 
 void Mesh::SetVertices(LPVOID vertices, int numberVertex, Buffer::BufferType BT_Type)
 {
+  if (_vertices)
+    delete _vertices;
   _vertices = new Buffer::VertexBuffer(vertices, numberVertex, BT_Type);
   setBufferType(BT_Type);
 }
 
 void Mesh::SetIndexes(LPVOID indexes, int numberIndexes, Buffer::BufferType BT_Type)
 {
+  if (_indexes)
+    delete _indexes;
   _indexes = new Buffer::IndexBuffer(indexes, numberIndexes, BT_Type);
 }
 

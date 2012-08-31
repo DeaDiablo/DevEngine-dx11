@@ -4,10 +4,14 @@
 #include <map>
 
 #include <Core/DInclude.h>
+#include <Core/DSettings.h>
 #include <DX/DBuffer.h>
 
 namespace dev
 {
+  class VertexShader;
+  class PixelShader;
+
   class Shader
   {
   public:
@@ -32,6 +36,26 @@ namespace dev
       return _function.c_str();
     }
 
+    virtual VertexShader* AsVertexShader() 
+    { 
+      return NULL; 
+    }
+
+    virtual PixelShader* AsPixelShader() 
+    { 
+      return NULL; 
+    }
+
+    void Release()
+    {
+      delete this;
+    }
+
+    bool IsCompiled() 
+    {
+      return _isCompiled;
+    }
+
   protected:
 
     inline void releaseBlob() 
@@ -52,6 +76,7 @@ namespace dev
     std::wstring    _path;
     DWORD           _type;
     std::string     _function;
+    bool            _isCompiled;
   };
 
   class VertexShader : public Shader
@@ -71,7 +96,7 @@ namespace dev
       VS_5_0
     };
 
-    VertexShader(const wchar_t* path, TypeVertexShader type, const char* fuction);
+    VertexShader(const wchar_t* path, TypeVertexShader type = VS_4_0, const char* nameFunction = defaultVSfunction);
     virtual ~VertexShader();
 
     virtual bool CompileShader();
@@ -81,6 +106,11 @@ namespace dev
     inline const Buffer::BufferType& GetBufferType() const
     {
       return _bufferType;
+    }
+
+    virtual VertexShader* AsVertexShader() 
+    { 
+      return this; 
     }
 
   protected:
@@ -96,6 +126,9 @@ namespace dev
   {
   public:
 
+    #define MAX_RENDER_TARGETS    D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT
+    #define MAX_SHADER_RESOURCES  D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT
+
     enum TypePixelShader
     {
       PS_2_0,
@@ -109,17 +142,42 @@ namespace dev
       PS_5_0
     };
 
-    PixelShader(const wchar_t* path, TypePixelShader type, const char* fuction);
+    PixelShader(const wchar_t* path, TypePixelShader type = PS_4_0, const char* nameFunction = defaultPSfunction);
     virtual ~PixelShader();
 
     virtual bool CompileShader();
     virtual bool SetShader();
+   
+    virtual void SetScreenRenderTarget(int targetSlot);
+    virtual void SetResourceRenderTarget(int targetSlot, int numTargetInDX, DXGI_FORMAT format);
+    virtual void ClearRenderTarget(int targetSlot);
+    virtual void ClearAllRenderTargets();
+    
+    virtual void SetScreenDepthStencil();
+    virtual void SetDepthStencilTarget(int num);
+    virtual void ClearDepthStencilTarget();
+
+    virtual void UseResourceRenderTarget(int resourceSlot, int numTargetInDX);
+    virtual void ClearResourceRenderTarget(int resourceSlot);
+    virtual void ClearResourcesRenderTarget();
+
+    virtual PixelShader* AsPixelShader() 
+    { 
+      return this; 
+    }
 
   protected:
+    virtual void updateNumRenderTargets();
+    virtual void updateNumShaderResources();
     virtual const char* getType();
     virtual bool supportTypeShader();
 
     ID3D11PixelShader* _shader;
+    ID3D11DepthStencilView* _depthStencilView;
+    ID3D11RenderTargetView* _renderTargets[MAX_RENDER_TARGETS];
+    int _numRTSlot;
+    ID3D11ShaderResourceView* _shaderResources[MAX_SHADER_RESOURCES];
+    int _startSRSlot, _numSRSlot;
   };
 
   class ShaderPass
@@ -129,6 +187,7 @@ namespace dev
     virtual ~ShaderPass();
 
     void SetVertexShader(const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName);
+    void SetVertexShader(VertexShader* vs);
     inline VertexShader* GetVertexShader() 
     { 
       return _vShader; 
@@ -141,6 +200,7 @@ namespace dev
     }
 
     void SetPixelShader(const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName);
+    void SetPixelShader(PixelShader* ps);
     inline PixelShader* GetPixelShader() 
     { 
       return _pShader; 

@@ -72,7 +72,7 @@ void SkyBox::SetCamera(Camera* camera)
 void SkyBox::updateParameters()
 {
   Mesh::updateParameters();
-  _oldDSState = DX.GetDepthStencilState();
+  _oldDSState = DX.GetActiveDepthStencilState();
   DX.SetDepthStencilState(_skyDSState);
 }
 

@@ -40,6 +40,9 @@ namespace dev
     void RegisterOutputClass(OutputClass* outputClass);
     void UnregisterOutputClass(OutputClass* outputClass);
 
+    void RegisterVS(VertexShader* vs);
+    void RegisterPS(PixelShader* ps);
+
   protected:
     Window*   _wnd;
     HWND      _hWnd;

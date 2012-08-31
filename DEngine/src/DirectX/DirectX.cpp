@@ -8,13 +8,15 @@ DirectXClass::DirectXClass() :
   _dxDevice(NULL),
   _dxDeviceContext(NULL),
   _dxSwapChain(NULL),
-  _dxRenderTargetView(NULL),
-  _dxDepthStencilView(NULL),
-  _dxDepthStencilState(NULL),
+  _activeRenderTargetView(NULL),
+  _activeDepthStencilView(NULL),
+  _activeDepthStencilState(NULL),
   _dxRasterState(NULL),
   _featureLevel(D3D_FEATURE_LEVEL_11_0),
   
   _initialized(FALSE),
+  _screenRenderTarget(NULL),
+  _screenDepthStencilTarget(NULL),
 
   _width(0),
   _height(0),
@@ -40,23 +42,13 @@ bool DirectXClass::InitDirectX(HWND hWnd, bool fullScreenMode, UINT msMode, UINT
   if (!CreateDeviceDX())
     return FALSE;
 
-  if (!CreateRenderTargetDX())
+  if (!CreateScreenRenderTarget() || !CreateScreenDepthStencilView())
     return FALSE;
-
-  _dxDepthStencilView = CreateDepthStencilView();
-  if (!_dxDepthStencilView)
-    return FALSE;
-  SetDepthStencilView(_dxDepthStencilView);
-  
-  _dxDepthStencilState = CreateDepthStencilState();
-  if (!_dxDepthStencilState)
-    return FALSE;
-  SetDepthStencilState(_dxDepthStencilState);
   
   CreateViewPort((float)width, (float)height);
 
+  _dxDeviceContext->OMSetRenderTargets(1, &_screenRenderTarget->renderTargetView, _screenDepthStencilTarget->depthStencilView);
   //_dxDeviceContext->RSSetState(_dxRasterState);
-
   _dxDeviceContext->RSSetViewports(1, &_viewPort);
   _dxDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -101,37 +93,156 @@ bool DirectXClass::CreateDeviceDX()
     creationFlags, featureLevels, numFeatureLevels, D3D11_SDK_VERSION, 
     &scd, &_dxSwapChain, &_dxDevice, &_featureLevel, &_dxDeviceContext)))
   {
-    Log::GetLog()->WriteToLog(L"Failed device init DirectX");
+    WRITE_LOG(L"Failed device init DirectX");
     _dxSwapChain = NULL;
     _dxDevice = NULL;
     _dxDeviceContext = NULL;
     return FALSE;
   }
 
-  Log::GetLog()->WriteToLog(L"Init device DirectX");
+  WRITE_LOG(L"Init device DirectX");
   return TRUE;
 }
 
-bool DirectXClass::CreateRenderTargetDX()
+ID3D11RenderTargetView* DirectXClass::CreateScreenRenderTarget()
 {
-  ID3D11Texture2D* backBuffer = NULL;
-  if(FAILED(_dxSwapChain->GetBuffer(0, __uuidof( ID3D11Texture2D ), (LPVOID*)&backBuffer)))
+  if (_screenRenderTarget)
+    return _screenRenderTarget->renderTargetView;
+
+  _screenRenderTarget = new RenderTarget();
+  _screenRenderTarget->renderTexture = NULL;
+  if(FAILED(_dxSwapChain->GetBuffer(0, __uuidof( ID3D11Texture2D ), (LPVOID*)&_screenRenderTarget->renderTexture)))
   {
     Log::GetLog()->WriteToLog(L"Failed back buffer init");
-    return FALSE;
+    return NULL;
   }
 
-  HRESULT hr = _dxDevice->CreateRenderTargetView(backBuffer, NULL, &_dxRenderTargetView);
-  backBuffer->Release();
+  HRESULT hr = _dxDevice->CreateRenderTargetView(_screenRenderTarget->renderTexture, NULL, &_screenRenderTarget->renderTargetView);
+
   if(FAILED(hr))
   {
     Log::GetLog()->WriteToLog(L"Failed init RenderTargetView");
-    return FALSE;
+    return NULL;
   }
-  
-  Log::GetLog()->WriteToLog(L"Created RenderTargetView");
-  
-  return TRUE;
+
+  Log::GetLog()->WriteToLog(L"Created screen RenderTargetView");
+
+  return _screenRenderTarget->renderTargetView;
+}
+
+ID3D11RenderTargetView* DirectXClass::CreateTextureRenderTarget(int targetNum, DXGI_FORMAT format, bool recreate)
+{
+  if (!recreate && _renderTargets.find(targetNum) != _renderTargets.end())
+    return _renderTargets[targetNum]->renderTargetView;
+
+  RenderTarget* rt = new RenderTarget();
+  rt->renderTexture = NULL;
+  D3D11_TEXTURE2D_DESC textureDesc;
+  // Initialize the render target texture description.
+  ZeroMemory(&textureDesc, sizeof(textureDesc));
+
+  // Setup the render target texture description.
+  textureDesc.Width               = _width;
+  textureDesc.Height              = _height;
+  textureDesc.MipLevels           = 1;
+  textureDesc.ArraySize           = 1;
+  textureDesc.Format              = format;//DXGI_FORMAT_R32G32B32A32_FLOAT;
+  textureDesc.SampleDesc.Count    = _msMode;
+  textureDesc.SampleDesc.Quality  = 0;
+  textureDesc.Usage               = D3D11_USAGE_DEFAULT;
+  textureDesc.BindFlags           = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+  textureDesc.CPUAccessFlags      = 0;
+  textureDesc.MiscFlags           = 0;
+
+  if(FAILED(_dxDevice->CreateTexture2D(&textureDesc, NULL, &rt->renderTexture)))
+  {
+    WRITE_LOG(L"Failed render texture init");
+    return NULL;
+  }
+
+  D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+
+  renderTargetViewDesc.Format = format;
+  if (_msMode > 1)
+    renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+  else
+    renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+  renderTargetViewDesc.Texture2D.MipSlice = 0;
+
+  if(FAILED(_dxDevice->CreateRenderTargetView(rt->renderTexture, NULL, &rt->renderTargetView)))
+  {
+    WRITE_LOG(L"Failed init RenderTargetView");
+    return NULL;
+  }
+
+  // create shader resource view
+  D3D11_SHADER_RESOURCE_VIEW_DESC resourceViewDesc;
+  ZeroMemory(&resourceViewDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+  resourceViewDesc.Format = format;
+  if (_msMode > 1)
+    resourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMS;
+  else
+    resourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+  resourceViewDesc.Texture2D.MipLevels = 1;
+
+  if(FAILED(_dxDevice->CreateShaderResourceView(rt->renderTexture, &resourceViewDesc, &rt->shaderResource)))
+  {
+    WRITE_LOG(L"Failed init ShaderResource for RenderTargetView");
+    return NULL;
+  }
+
+  WRITE_LOG(L"Created texture RenderTargetView");
+
+  _renderTargets[targetNum] = rt;
+
+  return rt->renderTargetView;
+}
+
+void DirectXClass::SetRenderTargets(int num, ID3D11RenderTargetView** rtv, ID3D11DepthStencilView* dsv)
+{
+  bool active = TRUE;
+
+  if (_numRTV == num && _activeDepthStencilView == dsv)
+  {
+    for (int i = 0; i < num; i++)
+    {
+      if (_activeRenderTargetView[i] != rtv[i])
+      {
+        active = FALSE;
+        break;
+      }
+    }
+  }
+  else
+    active = FALSE;
+
+  if (active)
+    return;
+
+  _numRTV = num;
+  _activeRenderTargetView = rtv;
+  _activeDepthStencilView = dsv;
+  _dxDeviceContext->OMSetRenderTargets(_numRTV, _activeRenderTargetView, _activeDepthStencilView);
+}
+
+void DirectXClass::destroyRenderTargets()
+{
+  for(RenderTargetMap::iterator i = _renderTargets.begin(); i != _renderTargets.end(); ++i)
+  {
+    DESTROY_DX((*i).second->renderTexture)
+    DESTROY_DX((*i).second->renderTargetView)
+    DESTROY_DX((*i).second->shaderResource)
+    delete (*i).second;
+  }
+  _renderTargets.clear();
+
+  if (_screenRenderTarget)
+  {
+    DESTROY_DX(_screenRenderTarget->renderTexture)
+    DESTROY_DX(_screenRenderTarget->renderTargetView)
+    delete _screenRenderTarget;
+    _screenRenderTarget = NULL;
+  }
 }
 
 bool DirectXClass::CreateRasterizerState()
@@ -151,7 +262,7 @@ bool DirectXClass::CreateRasterizerState()
   // Create the rasterizer state from the description we just filled out.
   if (FAILED(_dxDevice->CreateRasterizerState(&rasterDesc, &_dxRasterState)))
   {
-    Log::GetLog()->WriteToLog(L"RasterizerState not init");
+    WRITE_LOG(L"RasterizerState not init");
     return FALSE;
   }
 
@@ -173,7 +284,8 @@ void DirectXClass::DestroyDirectX()
   _initialized = FALSE;
 
   DESTROY_DX(_dxSwapChain)
-  ClearDSBuffer();
+  destroyRenderTargets();
+  destroyDSBuffer();
   
   if (_dxDeviceContext)
   {
@@ -187,46 +299,13 @@ void DirectXClass::DestroyDirectX()
   destroyShaderManager();
   destroyTextureManager();
 
-  Log::GetLog()->WriteToLog(L"Release DirectX");
+  WRITE_LOG(L"Release DirectX");
 }
 
-//Depth and Stencil buffers
-void DirectXClass::ClearDSBuffer()
+DirectXClass::DepthStencilTarget* DirectXClass::newDepthStencilTarget()
 {
-  for(DSViewSet::iterator i = _dsViewVec.begin(); i != _dsViewVec.end(); ++i)
-  {
-    ID3D11DepthStencilView* element = (*i);
-    DESTROY_DX(element);
-  }
-
-  for(DSTex2DSet::iterator i = _dsTex2DVec.begin(); i != _dsTex2DVec.end(); ++i)
-  {
-    ID3D11Texture2D* element = (*i);
-    DESTROY_DX(element);
-  }
-
-  for(DSStateSet::iterator i = _dsStateVec.begin(); i != _dsStateVec.end(); ++i)
-  {
-    ID3D11DepthStencilState* element = (*i);
-    DESTROY_DX(element);
-  }
-}
-
-void DirectXClass::SetDepthStencilView(ID3D11DepthStencilView* dsView)
-{
-  _dxDepthStencilView = dsView;
-  _dxDeviceContext->OMSetRenderTargets(1, &_dxRenderTargetView, _dxDepthStencilView);
-}
-
-void DirectXClass::SetDepthStencilState(ID3D11DepthStencilState* dsState)
-{
-  _dxDepthStencilState = dsState;
-  _dxDeviceContext->OMSetDepthStencilState(_dxDepthStencilState, 1);
-}
-
-ID3D11DepthStencilView* DirectXClass::CreateDepthStencilView()
-{
-  ID3D11Texture2D* dxDepthStencil = NULL;
+  DepthStencilTarget* dst = new DepthStencilTarget();
+  dst->depthStencilTexture = NULL;
   // Create depth stencil texture
   D3D11_TEXTURE2D_DESC descDepth;
   ZeroMemory( &descDepth, sizeof(descDepth) );
@@ -241,13 +320,11 @@ ID3D11DepthStencilView* DirectXClass::CreateDepthStencilView()
   descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
   descDepth.CPUAccessFlags = 0;
   descDepth.MiscFlags = 0;
-  if (FAILED(_dxDevice->CreateTexture2D(&descDepth, NULL, &dxDepthStencil)))
+  if (FAILED(_dxDevice->CreateTexture2D(&descDepth, NULL, &dst->depthStencilTexture)))
   {
-    Log::GetLog()->WriteToLog(L"DepthStencil not init");
+    WRITE_LOG(L"DepthStencil not init");
     return FALSE;
   }
-
-  _dsTex2DVec.insert(dxDepthStencil);
 
   ID3D11DepthStencilView* dxDepthStencilView = NULL;
 
@@ -255,20 +332,68 @@ ID3D11DepthStencilView* DirectXClass::CreateDepthStencilView()
   D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
   ZeroMemory( &descDSV, sizeof(descDSV) );
   descDSV.Format = descDepth.Format;
-  if( _msMode > 1 )
+  if(_msMode > 1)
     descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
   else
     descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
   descDSV.Texture2D.MipSlice = 0;
-  if (FAILED(_dxDevice->CreateDepthStencilView(dxDepthStencil, &descDSV, &dxDepthStencilView)))
+  if (FAILED(_dxDevice->CreateDepthStencilView(dst->depthStencilTexture, &descDSV, &dst->depthStencilView)))
   {
-    Log::GetLog()->WriteToLog(L"DepthStencilView not init");
+    WRITE_LOG(L"DepthStencilView not init");
     return NULL;
   }
+  return dst;
+}
 
-  _dsViewVec.insert(dxDepthStencilView);
+//Depth and Stencil buffers
+void DirectXClass::destroyDSBuffer()
+{
+  for(DepthStencilTargetMap::iterator i = _depthStencilTargets.begin(); i != _depthStencilTargets.end(); ++i)
+  {
+    DESTROY_DX((*i).second->depthStencilTexture)
+    DESTROY_DX((*i).second->depthStencilView)
+    delete (*i).second;
+  }
 
-  return dxDepthStencilView;
+  if (_screenDepthStencilTarget)
+  {
+    DESTROY_DX(_screenDepthStencilTarget->depthStencilTexture)
+    DESTROY_DX(_screenDepthStencilTarget->depthStencilView)
+    delete _screenDepthStencilTarget;
+    _screenDepthStencilTarget = NULL;
+  }
+
+  for(DSStateSet::iterator i = _dsStateVec.begin(); i != _dsStateVec.end(); ++i)
+  {
+    ID3D11DepthStencilState* element = (*i);
+    DESTROY_DX(element)
+  }
+}
+
+void DirectXClass::SetDepthStencilState(ID3D11DepthStencilState* dss)
+{
+  if (_activeDepthStencilState == dss)
+    return;
+
+  _activeDepthStencilState = dss;
+  _dxDeviceContext->OMSetDepthStencilState(_activeDepthStencilState, 1);
+}
+
+ID3D11DepthStencilView* DirectXClass::CreateScreenDepthStencilView()
+{
+  if (!_screenDepthStencilTarget)
+    _screenDepthStencilTarget = newDepthStencilTarget();
+    
+  return _screenDepthStencilTarget->depthStencilView;
+}
+
+ID3D11DepthStencilView* DirectXClass::CreateDepthStencilView(int targetNum)
+{
+  if (_depthStencilTargets.find(targetNum) != _depthStencilTargets.end())
+    return _depthStencilTargets[targetNum]->depthStencilView;
+
+  _depthStencilTargets[targetNum] = newDepthStencilTarget();
+  return _depthStencilTargets[targetNum]->depthStencilView;
 }
 
 ID3D11DepthStencilState* DirectXClass::CreateDepthStencilState(bool depthEnable, D3D11_DEPTH_WRITE_MASK depthMask, D3D11_COMPARISON_FUNC depthComparison)
@@ -301,7 +426,7 @@ ID3D11DepthStencilState* DirectXClass::CreateDepthStencilState(bool depthEnable,
 
   if (FAILED(_dxDevice->CreateDepthStencilState(&dsDesc, &dxDepthStencilState)))
   {
-    Log::GetLog()->WriteToLog(L"DepthStencilState not created");
+    WRITE_LOG(L"DepthStencilState not created");
     return NULL;
   }
 
@@ -311,10 +436,35 @@ ID3D11DepthStencilState* DirectXClass::CreateDepthStencilState(bool depthEnable,
 }
 
 //DRAW
-void DirectXClass::ClearFrame()
+void DirectXClass::ClearAllRenderTargets()
 {
-  _dxDeviceContext->ClearRenderTargetView(_dxRenderTargetView, clearColor);
-  _dxDeviceContext->ClearDepthStencilView(_dxDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+  for(RenderTargetMap::iterator i = _renderTargets.begin(); i != _renderTargets.end(); ++i)
+    _dxDeviceContext->ClearRenderTargetView((*i).second->renderTargetView, clearColor);
+  if (_screenRenderTarget->renderTargetView)
+    _dxDeviceContext->ClearRenderTargetView(_screenRenderTarget->renderTargetView, clearColor);
+}
+
+void DirectXClass::ClearAllDepthStencil()
+{
+  for(DepthStencilTargetMap::iterator i = _depthStencilTargets.begin(); i != _depthStencilTargets.end(); ++i)
+    _dxDeviceContext->ClearDepthStencilView((*i).second->depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+  if (_screenDepthStencilTarget->depthStencilView)
+    _dxDeviceContext->ClearDepthStencilView(_screenDepthStencilTarget->depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+}
+
+void DirectXClass::ClearActiveRenderTargets()
+{
+  if (_activeRenderTargetView)
+  {
+    for (int i = 0; i < _numRTV; i++)
+      _dxDeviceContext->ClearRenderTargetView(_activeRenderTargetView[i], clearColor);
+  }
+}
+
+void DirectXClass::ClearActiveDepthStencil()
+{
+  if (_activeDepthStencilView)
+    _dxDeviceContext->ClearDepthStencilView(_activeDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
 void DirectXClass::Present(bool vSync)
@@ -326,16 +476,10 @@ void DirectXClass::Present(bool vSync)
 void DirectXClass::destroyShaderManager()
 {
   for(ShaderMap::iterator i = _vertexShaders.begin(); i != _vertexShaders.end(); ++i)
-  {
-    delete (*i).second->vertexShader;
     delete (*i).second;
-  }
 
   for(ShaderMap::iterator i = _pixelShaders.begin(); i != _pixelShaders.end(); ++i)
-  {
-    delete (*i).second->pixelShader;
     delete (*i).second;
-  }
 
   _vertexShaders.clear();
   _pixelShaders.clear();
@@ -345,88 +489,60 @@ VertexShader* DirectXClass::GetVertexShader(const wchar_t* path, VertexShader::T
 {
   int hash = getShaderHash(path, type, funcName);
   ShaderMap::iterator i = _vertexShaders.find(hash);
-  if (i == _vertexShaders.end())
-  {
-    _buffer = new ShaderStruct();
-    _buffer->vertexShader = new VertexShader(path, type, funcName);
-    if (!_buffer->vertexShader->CompileShader())
-    {
-      delete _buffer->vertexShader;
-      delete _buffer;
-      return NULL;
-    }
-    _buffer->count = 1;
-    _vertexShaders[hash] = _buffer;
-    return _buffer->vertexShader;
-  }
+  if (i != _vertexShaders.end())
+    return (*i).second->AsVertexShader();
 
-  (*i).second->count++;
-  return (*i).second->vertexShader;
+  VertexShader* shader = new VertexShader(path, type, funcName);
+  if (!shader->CompileShader())
+  {
+    delete shader;
+    return NULL;
+  }
+  _vertexShaders[hash] = shader;
+  return shader;
+}
+
+void DirectXClass::RegistrationVertexShader(VertexShader* vs)
+{
+  int hash = getShaderHash(vs->GetPath(), vs->GetType(), vs->GetFuncName());
+  ShaderMap::iterator i = _vertexShaders.find(hash);
+  if (i != _vertexShaders.end())
+    return;
+
+  if (!vs->IsCompiled())
+    vs->CompileShader();
+  _vertexShaders[hash] = vs;
+  return;
 }
 
 PixelShader* DirectXClass::GetPixelShader(const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName)
 {
   int hash = getShaderHash(path, type, funcName);
   ShaderMap::iterator i = _pixelShaders.find(hash);
-  if (i == _pixelShaders.end())
-  {
-    _buffer = new ShaderStruct();
-    _buffer->pixelShader = new PixelShader(path, type, funcName);
-    if (!_buffer->pixelShader->CompileShader())
-    {
-      delete _buffer->pixelShader;
-      delete _buffer;
-      return NULL;
-    }
-    _buffer->count = 1;
-    _pixelShaders[hash] = _buffer;
-    return _buffer->pixelShader;
-  }
+  if (i != _pixelShaders.end())
+    return (*i).second->AsPixelShader();
 
-  (*i).second->count++;
-  return (*i).second->pixelShader;
+  PixelShader* shader = new PixelShader(path, type, funcName);
+  if (!shader->CompileShader())
+  {
+    delete shader;
+    return NULL;
+  }
+  _pixelShaders[hash] = shader;
+  return shader;
 }
 
-void DirectXClass::RemoveVertexShader(VertexShader* shader)
+void DirectXClass::RegistrationPixelShader(PixelShader* ps)
 {
-  if (!shader)
+  int hash = getShaderHash(ps->GetPath(), ps->GetType(), ps->GetFuncName());
+  ShaderMap::iterator i = _pixelShaders.find(hash);
+  if (i != _pixelShaders.end())
     return;
 
-  for (ShaderMap::iterator i = _vertexShaders.begin(); i != _vertexShaders.end(); ++i)
-  {
-    if ((*i).second->vertexShader == shader)
-    {
-      (*i).second->count--;
-      if ((*i).second->count < 1)
-      {
-        delete (*i).second->vertexShader;
-        delete (*i).second;
-        _vertexShaders.erase(i);
-      }
-      return;
-    }
-  }
-}
-
-void DirectXClass::RemovePixelShader(PixelShader* shader)
-{
-  if (!shader)
-    return;
-
-  for (ShaderMap::iterator i = _pixelShaders.begin(); i != _pixelShaders.end(); ++i)
-  {
-    if ((*i).second->pixelShader == shader)
-    {
-      (*i).second->count--;
-      if ((*i).second->count < 1)
-      {
-        delete (*i).second->pixelShader;
-        delete (*i).second;
-        _pixelShaders.erase(i);
-      }
-      return;
-    }
-  }
+  if (!ps->IsCompiled())
+    ps->CompileShader();
+  _pixelShaders[hash] = ps;
+  return;
 }
 
 UINT DirectXClass::getShaderHash(const wchar_t* path, DWORD type, const char* funcName)
@@ -440,11 +556,11 @@ UINT DirectXClass::getShaderHash(const wchar_t* path, DWORD type, const char* fu
 
 void DirectXClass::destroyTextureManager()
 {
-  for(TextureMap::iterator i = _textures.begin(); i != _textures.end(); i++)
+  for(TextureMap::iterator i = _textures.begin(); i != _textures.end(); ++i)
     delete (*i).second.texture;
   _textures.clear();
 
-  for(SamplerSet::iterator i = _samplers.begin(); i != _samplers.end(); i++)
+  for(SamplerSet::iterator i = _samplers.begin(); i != _samplers.end(); ++i)
   {
     ID3D11SamplerState* sampler = (*i);
     DESTROY_DX(sampler);
@@ -485,7 +601,7 @@ ID3D11SamplerState* DirectXClass::GetSamplerState()
   ID3D11SamplerState* state = NULL;
   if (FAILED(_dxDevice->CreateSamplerState(&sampDesc, &state)))
   {
-    Log::GetLog()->WriteToLog(L"SamplerState not created");
+    WRITE_LOG(L"SamplerState not created");
     return NULL;
   }
   

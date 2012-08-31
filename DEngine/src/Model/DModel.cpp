@@ -35,7 +35,7 @@ bool Model::OpenFile(const wchar_t* path)
   {
     std::wstring buffer(L"File not loaded: ");
     buffer += path;
-    Log::GetLog()->WriteToLog(buffer.c_str());
+    WRITE_LOG(buffer.c_str());
     return false;
   }
 
@@ -50,7 +50,7 @@ bool Model::OpenFile(const wchar_t* path)
     CloseHandle(hFile);
     std::wstring buffer(L"File not loaded: ");
     buffer += _path;
-    Log::GetLog()->WriteToLog(buffer.c_str());
+    WRITE_LOG(buffer.c_str());
     return FALSE;
   }
 
@@ -162,7 +162,7 @@ bool Model::readFile(HANDLE hFile, LPVOID buffer, DWORD size)
   {
     std::wstring buffer(L"File not loaded: ");
     buffer += _path;
-    Log::GetLog()->WriteToLog(buffer.c_str());
+    WRITE_LOG(buffer.c_str());
     return FALSE;
   }
   return TRUE;

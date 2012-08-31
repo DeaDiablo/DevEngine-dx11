@@ -17,7 +17,7 @@ Render::Render(int width, int height) :
 
   if (!_hWnd)
   {
-    Log::GetLog()->WriteToLog(L"Not _hWnd");
+    WRITE_LOG(L"Not _hWnd");
   }
 }
 
@@ -42,7 +42,7 @@ Render::Render(HINSTANCE hInstance, int PosX, int PosY, int Width, int Height) :
 
   if (!_hWnd)
   {
-    Log::GetLog()->WriteToLog(L"Not _hWnd");
+    WRITE_LOG(L"Not _hWnd");
   }
 }
 
@@ -220,4 +220,14 @@ void Render::UnregisterOutputClass(OutputClass* outputClass)
   _cs.Lock();
   _outputs.erase(outputClass);
   _cs.UnLock();
+}
+
+void Render::RegisterVS(VertexShader* vs)
+{
+  DX.RegistrationVertexShader(vs);
+}
+
+void Render::RegisterPS(PixelShader* ps)
+{
+  DX.RegistrationPixelShader(ps);
 }
