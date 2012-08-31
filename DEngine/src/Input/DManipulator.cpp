@@ -7,8 +7,8 @@ using namespace dev;
 Manipulator::Manipulator(std::wstring name) :
   _name(name),
   _camera(NULL),
-  _sens(defaultSens),
-  _speed(defaultSpeed)
+  _sens(DEFAULT_SENS),
+  _speed(DEFAULT_SPEED)
 {
 }
 

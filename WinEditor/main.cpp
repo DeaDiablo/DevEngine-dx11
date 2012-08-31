@@ -1,7 +1,7 @@
 #include <Core/DRender.h>
 #include <Model/DModel.h>
 #include <Model/DSkyBox.h>
-#include <Model/DPlane.h>
+#include <Model/DDeferredPlane.h>
 #include <Element/DCamera.h>
 #include <Input/DManipulatorWASD.h>
 
@@ -32,11 +32,7 @@ void main(HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int nCmdShow)
   mesh->SetPixelShader(0, ps);
   mesh->GetMeshByNum(0)->SetTexture(L"texture.bmp");
 
-  PlaneIdentity* pl = new PlaneIdentity(L"Plane");
-  pl->SetVertexShader(2, L"plane.fx");
-  pl->SetPixelShader(2, L"plane.fx");
-  pl->GetPixelShader(2)->ClearDepthStencilTarget();
-  pl->GetPixelShader(2)->UseResourceRenderTarget(0, 0);
+  DeferredPlane* pl = new DeferredPlane(L"Plane");
 
   SkyBox* sb = new SkyBox(L"skyBox", L"city.dds");
   sb->SetCamera(cam);

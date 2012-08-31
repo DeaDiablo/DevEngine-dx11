@@ -96,7 +96,7 @@ namespace dev
       VS_5_0
     };
 
-    VertexShader(const wchar_t* path, TypeVertexShader type = VS_4_0, const char* nameFunction = defaultVSfunction);
+    VertexShader(const wchar_t* path, TypeVertexShader type = VS_4_0, const char* nameFunction = DEFAULT_VS_FUNCTION);
     virtual ~VertexShader();
 
     virtual bool CompileShader();
@@ -142,7 +142,7 @@ namespace dev
       PS_5_0
     };
 
-    PixelShader(const wchar_t* path, TypePixelShader type = PS_4_0, const char* nameFunction = defaultPSfunction);
+    PixelShader(const wchar_t* path, TypePixelShader type = PS_4_0, const char* nameFunction = DEFAULT_PS_FUNCTION);
     virtual ~PixelShader();
 
     virtual bool CompileShader();

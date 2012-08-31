@@ -14,7 +14,7 @@ namespace dev
   public:
     static Log* GetLog()
     {
-      static Log* log = new Log(logFilename);
+      static Log* log = new Log(DEFAULT_LOG_FILE);
       return log;
     }
 

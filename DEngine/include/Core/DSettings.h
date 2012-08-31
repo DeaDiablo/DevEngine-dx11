@@ -3,14 +3,19 @@
 
 namespace dev
 {
-  static float            clearColor[4]        = { 0.6f, 0.6f, 1.0f, 1.0f };
-  static const wchar_t*   logFilename          = L"DEngine.log";
-  static const char*      defaultVSfunction    = "vs_main";
-  static const char*      defaultPSfunction    = "ps_main";
-  static const float      defaultSpeed         = 0.01f;
-  static const float      defaultSens          = 0.1f;
-  static const float      defaultNear          = 0.01f;
-  static const float      defaultFar           = 25000.0f;
+  static float  clearColor[4]     = { 0.6f, 0.6f, 1.0f, 1.0f };
+
+  #define DEFAULT_LOG_FILE        L"DEngine.log"
+  #define DEFAULT_VS_FUNCTION     "vs_main"
+  #define DEFAULT_PS_FUNCTION     "ps_main"
+  #define DEFAULT_SPEED           0.01f
+  #define DEFAULT_SENS            0.1f
+  #define DEFAULT_NEAR            0.01f
+  #define DEFAULT_FAR             25000.0f
+
+  //passes num
+  #define BACKGROUND_PASS_NUM     INT_MAX
+  #define DEFERRED_PASS_NUM       INT_MAX - 1
 }
 
 #endif

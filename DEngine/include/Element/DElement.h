@@ -81,9 +81,9 @@ namespace dev
       return NULL;
     }
 
-    virtual void SetVertexShader(UINT passNum, const wchar_t* path, VertexShader::TypeVertexShader type = VertexShader::VS_4_0, const char* funcName = defaultVSfunction);
+    virtual void SetVertexShader(UINT passNum, const wchar_t* path, VertexShader::TypeVertexShader type = VertexShader::VS_4_0, const char* funcName = DEFAULT_VS_FUNCTION);
     virtual void SetVertexShader(UINT passNum, VertexShader* vs);
-    virtual void SetPixelShader(UINT passNum, const wchar_t* path, PixelShader::TypePixelShader type = PixelShader::PS_4_0, const char* funcName = defaultPSfunction);
+    virtual void SetPixelShader(UINT passNum, const wchar_t* path, PixelShader::TypePixelShader type = PixelShader::PS_4_0, const char* funcName = DEFAULT_PS_FUNCTION);
     virtual void SetPixelShader(UINT passNum, PixelShader* ps);
 
     Buffer::BufferType GetBufferType() const

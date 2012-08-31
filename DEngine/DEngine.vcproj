@@ -536,6 +536,30 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="DeferredPlane"
+				>
+				<File
+					RelativePath=".\src\Model\DDeferredPlane.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\include\Model\DDeferredPlane.h"
+					>
+				</File>
+				<Filter
+					Name="shaders"
+					>
+					<File
+						RelativePath="..\workingDirectory\shaders\deferredPlain.ps"
+						>
+					</File>
+					<File
+						RelativePath="..\workingDirectory\shaders\deferredPlain.vs"
+						>
+					</File>
+				</Filter>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="DX"
