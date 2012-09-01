@@ -12,15 +12,15 @@
 namespace dev
 {
   #define DX          DirectX::Instance()
-  #define DX_DEVICE   DirectX::Instance().GetDevice()
-  #define DX_CONTEXT  DirectX::Instance().GetContext()
+  #define DX_DEVICE   DirectX::GetDevice()
+  #define DX_CONTEXT  DirectX::GetContext()
 
-  class DirectXClass
+  class DirectX : public Singleton<DirectX>
   {
   //initialize DirectX
   public:
-    DirectXClass();
-    virtual ~DirectXClass();
+    DirectX();
+    virtual ~DirectX();
 
     bool InitDirectX(HWND hWnd, bool fullScreenMode, UINT msMode, UINT width, UINT height, UINT refreshHz);
     bool CreateDeviceDX();
@@ -33,13 +33,13 @@ namespace dev
     inline UINT GetWidth() const { return _width; }
     inline UINT GetHeight() const { return _height; }
 
-    inline ID3D11Device*             GetDevice()             { return _dxDevice; }
-    inline ID3D11DeviceContext*      GetContext()            { return _dxDeviceContext; }
-    inline ID3D11RasterizerState*    GetRasterizerState()    { return _dxRasterState; }
+    static inline ID3D11Device&         GetDevice()             { return *_dxDevice; }
+    static inline ID3D11DeviceContext&  GetContext()            { return *_dxDeviceContext; }
+    inline ID3D11RasterizerState*       GetRasterizerState()    { return _dxRasterState; }
   
   protected:
-    ID3D11Device*            _dxDevice;
-    ID3D11DeviceContext*     _dxDeviceContext;
+    static ID3D11Device*            _dxDevice;
+    static ID3D11DeviceContext*     _dxDeviceContext;
     IDXGISwapChain*          _dxSwapChain;
     ID3D11RasterizerState*   _dxRasterState;
     
@@ -185,9 +185,6 @@ namespace dev
     typedef std::set<ID3D11SamplerState*> SamplerSet;
     SamplerSet _samplers;
   };
-
-  class DirectX : public Singleton<DirectXClass>
-  {};
 }
 
 #endif

@@ -9,7 +9,7 @@ Texture::Texture(const wchar_t* path) :
   _path(path),
   _texture(NULL)
 {
-  if(FAILED(D3DX11CreateShaderResourceViewFromFileW(DX_DEVICE, path, NULL, NULL, &_texture, NULL )))
+  if(FAILED(D3DX11CreateShaderResourceViewFromFileW(&DX_DEVICE, path, NULL, NULL, &_texture, NULL )))
   {
     std::wstring buf(L"Texture not loaded: ");
     buf += path;
@@ -36,11 +36,11 @@ void Texture::destroy()
 void Texture::SetVSTexture(int num)
 {
   if (num < MAX_NUM_TEXTURES && _texture)
-    DX_CONTEXT->VSSetShaderResources(0, num + 1, &_texture);
+    DX_CONTEXT.VSSetShaderResources(0, num + 1, &_texture);
 }
 
 void Texture::SetPSTexture(int num)
 {
   if (num < MAX_NUM_TEXTURES && _texture)
-    DX_CONTEXT->PSSetShaderResources(0, num + 1, &_texture);
+    DX_CONTEXT.PSSetShaderResources(0, num + 1, &_texture);
 }

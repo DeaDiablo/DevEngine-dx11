@@ -73,17 +73,17 @@ void Mesh::draw()
   for(UINT i = 0; i < _textures.size(); i++)
     _textures[i]->SetPSTexture(i);
 
-  DX_CONTEXT->PSSetSamplers(0, 1, &_sampler);
+  DX_CONTEXT.PSSetSamplers(0, 1, &_sampler);
 
   _vertices->SetAsSource();
   if (_indexes == NULL)
   {
-    DX_CONTEXT->Draw(_vertices->GetCount(), 0);
+    DX_CONTEXT.Draw(_vertices->GetCount(), 0);
   }
   else
   {
     _indexes->SetAsSource();
-    DX_CONTEXT->DrawIndexed(_indexes->GetCount(), 0, 0);
+    DX_CONTEXT.DrawIndexed(_indexes->GetCount(), 0, 0);
   }
 }
 

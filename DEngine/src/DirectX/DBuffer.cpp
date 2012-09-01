@@ -194,13 +194,13 @@ void Buffer::SetBuffer(LPVOID src, UINT count, BufferType BT_Type)
   {
     ZeroMemory(&_data, sizeof(_data));
     _data.pSysMem = src;
-    if (FAILED(DX_DEVICE->CreateBuffer(&_bufferDesc, &_data, &_buffer)))
+    if (FAILED(DX_DEVICE.CreateBuffer(&_bufferDesc, &_data, &_buffer)))
     {
       WRITE_LOG(L"Buffer not created (DVertex.cpp)");
     }
   }
   else
-    if (FAILED(DX_DEVICE->CreateBuffer(&_bufferDesc, NULL, &_buffer)))
+    if (FAILED(DX_DEVICE.CreateBuffer(&_bufferDesc, NULL, &_buffer)))
     {
       WRITE_LOG(L"Buffer not created (DVertex.cpp)");
     }
@@ -244,7 +244,7 @@ void VertexBuffer::SetAsSource()
   if (!_buffer)
     return;
 
-  DX_CONTEXT->IASetVertexBuffers( 0, 1, &_buffer, &_sizeSrc, &_offset );
+  DX_CONTEXT.IASetVertexBuffers( 0, 1, &_buffer, &_sizeSrc, &_offset );
 }
 
 //Index buffer
@@ -276,7 +276,7 @@ void IndexBuffer::SetAsSource()
   if (!_buffer)
     return;
 
-  DX_CONTEXT->IASetIndexBuffer(_buffer, (DXGI_FORMAT)_type, 0);
+  DX_CONTEXT.IASetIndexBuffer(_buffer, (DXGI_FORMAT)_type, 0);
 }
 
 //Index buffer
@@ -319,7 +319,7 @@ void ConstantBuffer::SetAsVSSource(UINT num)
   if (!_buffer || num >= D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT)
     return;
 
-  DX_CONTEXT->VSSetConstantBuffers(num, 1, &_buffer);
+  DX_CONTEXT.VSSetConstantBuffers(num, 1, &_buffer);
 }
 
 void ConstantBuffer::SetAsPSSource(UINT num)
@@ -327,7 +327,7 @@ void ConstantBuffer::SetAsPSSource(UINT num)
   if (!_buffer || num >= D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT)
     return;
 
-  DX_CONTEXT->PSSetConstantBuffers(num, 1, &_buffer);
+  DX_CONTEXT.PSSetConstantBuffers(num, 1, &_buffer);
 }
 
 void ConstantBuffer::SetAsSource()
@@ -339,5 +339,5 @@ void ConstantBuffer::UpdateResource(LPVOID src)
   if (!_buffer)
     return;
 
-  DX_CONTEXT->UpdateSubresource(_buffer, 0, NULL, src, 0, 0);
+  DX_CONTEXT.UpdateSubresource(_buffer, 0, NULL, src, 0, 0);
 }

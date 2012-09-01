@@ -139,8 +139,8 @@ bool VertexShader::SetShader()
   if (!_shader || !_layout)
     return FALSE;
   
-  DX_CONTEXT->VSSetShader(_shader, NULL, 0);
-  DX_CONTEXT->IASetInputLayout(_layout);
+  DX_CONTEXT.VSSetShader(_shader, NULL, 0);
+  DX_CONTEXT.IASetInputLayout(_layout);
   return TRUE;
 }
 
@@ -149,7 +149,7 @@ bool VertexShader::CompileShader()
   if (!compileShaderFromFile(_path.c_str(), _function.c_str(), getType()))
     return FALSE;
 
-  HRESULT hr = DX_DEVICE->CreateVertexShader(_blob->GetBufferPointer(), _blob->GetBufferSize(), NULL, &_shader);
+  HRESULT hr = DX_DEVICE.CreateVertexShader(_blob->GetBufferPointer(), _blob->GetBufferSize(), NULL, &_shader);
 
   if (FAILED(hr))
   {
@@ -169,7 +169,7 @@ bool VertexShader::CreateLaout(Buffer::BufferType BT_Type)
   
   _bufferType = BT_Type;
 
-  HRESULT hr = DX_DEVICE->CreateInputLayout(Buffer::Declaration::GetLayout(_bufferType), Buffer::Declaration::GetSizeLayout(_bufferType), _blob->GetBufferPointer(), _blob->GetBufferSize(), &_layout);
+  HRESULT hr = DX_DEVICE.CreateInputLayout(Buffer::Declaration::GetLayout(_bufferType), Buffer::Declaration::GetSizeLayout(_bufferType), _blob->GetBufferPointer(), _blob->GetBufferSize(), &_layout);
 
   if (FAILED(hr))
   {
@@ -257,8 +257,8 @@ bool PixelShader::SetShader()
   if (_numRTSlot > 0)
     DX.SetRenderTargets(_numRTSlot, _renderTargets, _depthStencilView);
   if (_numSRSlot > 0)
-    DX_CONTEXT->PSSetShaderResources(_startSRSlot, _numSRSlot, _shaderResources);
-  DX_CONTEXT->PSSetShader(_shader, NULL, 0);
+    DX_CONTEXT.PSSetShaderResources(_startSRSlot, _numSRSlot, _shaderResources);
+  DX_CONTEXT.PSSetShader(_shader, NULL, 0);
 
   return TRUE;
 }
@@ -268,7 +268,7 @@ bool PixelShader::CompileShader()
   if (!compileShaderFromFile(_path.c_str(), _function.c_str(), getType()))
     return FALSE;
 
-  HRESULT hr = DX_DEVICE->CreatePixelShader(_blob->GetBufferPointer(), _blob->GetBufferSize(), NULL, &_shader);
+  HRESULT hr = DX_DEVICE.CreatePixelShader(_blob->GetBufferPointer(), _blob->GetBufferSize(), NULL, &_shader);
   
   releaseBlob();
   
