@@ -17,52 +17,52 @@ namespace dev
 
   class DirectX : public Singleton<DirectX>
   {
-  //initialize DirectX
+  //********************************************//
+  //**************SETUP DIRECTX*****************//
+  //********************************************//
   public:
     DirectX();
     virtual ~DirectX();
 
     bool InitDirectX(HWND hWnd, bool fullScreenMode, UINT msMode, UINT width, UINT height, UINT refreshHz);
     bool CreateDeviceDX();
-    bool CreateRasterizerState();
-    void CreateViewPort(float width, float height);
     void DestroyDirectX();
 
-    inline bool IsInitialized() const { return _initialized; }
-    inline D3D_FEATURE_LEVEL GetFeatureLevel() const { return _featureLevel; }
-    inline UINT GetWidth() const { return _width; }
-    inline UINT GetHeight() const { return _height; }
+    inline const bool&                  IsInitialized()   const  { return _initialized;       }
+    inline const D3D_FEATURE_LEVEL&     GetFeatureLevel() const  { return _featureLevel;      }
+    inline const UINT&                  GetWidth()        const  { return _width;             }
+    inline const UINT&                  GetHeight()       const  { return _height;            }
+    inline const UINT&                  GetMSMode()       const  { return _msMode;            }
 
-    static inline ID3D11Device&         GetDevice()             { return *_dxDevice; }
-    static inline ID3D11DeviceContext&  GetContext()            { return *_dxDeviceContext; }
-    inline ID3D11RasterizerState*       GetRasterizerState()    { return _dxRasterState; }
-  
+    static inline ID3D11Device&         GetDevice()              { return *_dxDevice;         }
+    static inline ID3D11DeviceContext&  GetContext()             { return *_dxDeviceContext;  }
+
   protected:
     static ID3D11Device*            _dxDevice;
     static ID3D11DeviceContext*     _dxDeviceContext;
-    IDXGISwapChain*          _dxSwapChain;
-    ID3D11RasterizerState*   _dxRasterState;
+    IDXGISwapChain*                 _dxSwapChain;
     
-    D3D_FEATURE_LEVEL        _featureLevel;
-    D3D11_VIEWPORT           _viewPort;
+    D3D_FEATURE_LEVEL               _featureLevel;
 
-    bool      _initialized;
+    bool                            _initialized;
 
-    HWND      _hWnd;
-    UINT      _width, _height;
-    UINT      _refreshHz;
-    UINT      _msMode;
-    bool      _fullScreenMode;
+    HWND                            _hWnd;
+    UINT                            _width, _height;
+    UINT                            _refreshHz;
+    UINT                            _msMode;
+    bool                            _fullScreenMode;
 
-  //Render targets
+  //********************************************//
+  //****************VIEW PORTS******************//
+  //********************************************//
   public:
-    struct RenderTarget
-    {
-      ID3D11Texture2D*          renderTexture;
-      ID3D11RenderTargetView*   renderTargetView;
-      ID3D11ShaderResourceView* shaderResource;
-    };
-
+    void CreateViewPort (float width, float height);
+  protected:
+    D3D11_VIEWPORT _viewPort;
+  //********************************************//
+  //**************RENDER TARGETS****************//
+  //********************************************//
+  public:
     inline ID3D11RenderTargetView** GetActiveRenderTargetView()  
     {
       return _activeRenderTargetView; 
@@ -82,26 +82,31 @@ namespace dev
       return NULL;
     }
 
-    ID3D11RenderTargetView* CreateScreenRenderTarget();
-    ID3D11RenderTargetView* CreateTextureRenderTarget(int targetNum, DXGI_FORMAT format, bool recreate = false);
-    void SetRenderTargets(int num, ID3D11RenderTargetView** rtv, ID3D11DepthStencilView* dsv);
+    ID3D11RenderTargetView*   CreateScreenRenderTarget  ();
+    ID3D11RenderTargetView*   CreateTextureRenderTarget (int targetNum, DXGI_FORMAT format, bool recreate = false);
+    void                      SetRenderTargets          (int num, ID3D11RenderTargetView** rtv, ID3D11DepthStencilView* dsv);
 
   protected:
+    struct RenderTarget
+    {
+      ID3D11Texture2D*          renderTexture;
+      ID3D11RenderTargetView*   renderTargetView;
+      ID3D11ShaderResourceView* shaderResource;
+    };
+    typedef std::map<int, RenderTarget*> RenderTargetMap;
+    
     void destroyRenderTargets();
 
-    typedef std::map<int, RenderTarget*> RenderTargetMap;
-    RenderTargetMap _renderTargets;
-    RenderTarget*   _screenRenderTarget;
-    ID3D11RenderTargetView** _activeRenderTargetView;
-    int _numRTV;
-  //Depth and Stencil buffers
-  public:
-    struct DepthStencilTarget
-    {
-      ID3D11Texture2D*         depthStencilTexture;
-      ID3D11DepthStencilView*  depthStencilView;
-    };
+    RenderTargetMap           _renderTargets;
+    RenderTarget*             _screenRenderTarget;
+    ID3D11RenderTargetView**  _activeRenderTargetView;
+    int                       _numRTV;
+  
 
+  //********************************************//
+  //*********DEPTH AND STENCIL TARGETS**********//
+  //********************************************//
+  public:
     inline ID3D11DepthStencilView* GetActiveDepthStencilView()
     { 
       return _activeDepthStencilView; 
@@ -111,57 +116,84 @@ namespace dev
       return _activeDepthStencilState; 
     }
 
-    void SetDepthStencilState(ID3D11DepthStencilState* dsState);
+    void                      SetDepthStencilState          (ID3D11DepthStencilState* dsState);
 
-    ID3D11DepthStencilView* CreateScreenDepthStencilView();
-    ID3D11DepthStencilView* CreateDepthStencilView(int targetNum);
-    ID3D11DepthStencilState* CreateDepthStencilState(bool depthEnable = TRUE, D3D11_DEPTH_WRITE_MASK depthMask = D3D11_DEPTH_WRITE_MASK_ALL, D3D11_COMPARISON_FUNC depthComparison = D3D11_COMPARISON_LESS);
+    ID3D11DepthStencilView*   CreateScreenDepthStencilView  ();
+    ID3D11DepthStencilView*   CreateDepthStencilView        (int targetNum);
+    ID3D11DepthStencilState*  CreateDepthStencilState       (bool depthEnable = TRUE, 
+                                                             D3D11_DEPTH_WRITE_MASK depthMask = D3D11_DEPTH_WRITE_MASK_ALL, 
+                                                             D3D11_COMPARISON_FUNC depthComparison = D3D11_COMPARISON_LESS);
 
   protected:
-    DepthStencilTarget* newDepthStencilTarget();
-    void destroyDSBuffer();
-
+    struct DepthStencilTarget
+    {
+      ID3D11Texture2D*         depthStencilTexture;
+      ID3D11DepthStencilView*  depthStencilView;
+    };
     typedef std::map<int, DepthStencilTarget*> DepthStencilTargetMap;
-    DepthStencilTargetMap _depthStencilTargets;
-    DepthStencilTarget* _screenDepthStencilTarget;
-
     typedef std::set<ID3D11DepthStencilState*> DSStateSet;
-    DSStateSet _dsStateVec;
 
-    ID3D11DepthStencilState* _activeDepthStencilState;
-    ID3D11DepthStencilView* _activeDepthStencilView;
+    DepthStencilTarget*       newDepthStencilTarget();
+    void                      destroyDSBuffer();
 
-  //Draw DirectX
+    DepthStencilTargetMap     _depthStencilTargets;
+    DepthStencilTarget*       _screenDepthStencilTarget;
+
+    DSStateSet                _dsStateVec;
+
+    ID3D11DepthStencilState*  _activeDepthStencilState;
+    ID3D11DepthStencilView*   _activeDepthStencilView;
+
+  //********************************************//
+  //***************RASTER STATES****************//
+  //********************************************//
   public:
-    void ClearAllRenderTargets();
-    void ClearAllDepthStencil();
-    void ClearActiveRenderTargets();
-    void ClearActiveDepthStencil();
-    void Present(bool vSync);
+    ID3D11RasterizerState*         CreateRasterizerState    ();
+    void                           SetRasterizerState       (ID3D11RasterizerState* rsState);
+    inline ID3D11RasterizerState*  GetActiveRasterizerState ()     
+    { 
+      return _activeRasterState; 
+    }
+  protected:
+    typedef std::set<ID3D11RasterizerState*> RSStateSet;
+
+    void destroyRSStates();
+    
+    RSStateSet               _rsStateVec;
+    ID3D11RasterizerState*   _activeRasterState;
+  //********************************************//
+  //***************DRAW DIRECTX*****************//
+  //********************************************//
+  public:
+    void ClearAllRenderTargets    ();
+    void ClearAllDepthStencil     ();
+    void ClearActiveRenderTargets ();
+    void ClearActiveDepthStencil  ();
+    void Present                  (bool vSync);
   protected:
 
-  //Shader manager DirectX
+  //********************************************//
+  //******************SHADERS*******************//
+  //********************************************//
   public:
-    void destroyShaderManager();
-
-    VertexShader* GetVertexShader(const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName);
-    void RegistrationVertexShader(VertexShader* vs);
-    PixelShader* GetPixelShader(const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName);
-    void RegistrationPixelShader(PixelShader* ps);
-
+    VertexShader* GetVertexShader           (const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName);
+    void          RegistrationVertexShader  (VertexShader* vs);
+    PixelShader*  GetPixelShader            (const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName);
+    void          RegistrationPixelShader   (PixelShader* ps);
   protected:
     typedef std::map<UINT, Shader*> ShaderMap;
+    typedef std::map<Buffer::BufferType, Shader*> LayoutMap;
+
+    void destroyShaderManager ();
+    UINT getShaderHash        (const wchar_t* path, DWORD type, const char* funcName);
+
     ShaderMap _vertexShaders;
     ShaderMap _pixelShaders;
-
-    typedef std::map<Buffer::BufferType, Shader*> LayoutMap;
     LayoutMap _layouts;
-
-    UINT getShaderHash(const wchar_t* path, DWORD type, const char* funcName);
-
-  //Texture manager DirectX
+  //********************************************//
+  //**************TEXTURE MANAGER***************//
+  //********************************************//
   public:
-    void destroyTextureManager();
 
     Texture* GetTexture(const wchar_t* path);
     ID3D11SamplerState* GetSamplerState();
@@ -169,20 +201,18 @@ namespace dev
     void RemoveTexture(Texture* texture);
 
   protected:
-    void clearTextureList();
-
     struct TextureStruct
     {
       Texture* texture;
       int      count;
     };
-
-    UINT getTextureHash(const wchar_t* path);
-
     typedef std::map<UINT, TextureStruct> TextureMap;
-    TextureMap _textures;
-
     typedef std::set<ID3D11SamplerState*> SamplerSet;
+
+    void destroyTextureManager();
+    UINT getTextureHash       (const wchar_t* path);
+
+    TextureMap _textures;
     SamplerSet _samplers;
   };
 }

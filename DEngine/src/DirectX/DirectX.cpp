@@ -8,22 +8,28 @@ ID3D11Device*            DirectX::_dxDevice         = NULL;
 ID3D11DeviceContext*     DirectX::_dxDeviceContext  = NULL;
 
 DirectX::DirectX() :
+  //setup DirectX
   _dxSwapChain(NULL),
-  _activeRenderTargetView(NULL),
-  _activeDepthStencilView(NULL),
-  _activeDepthStencilState(NULL),
-  _dxRasterState(NULL),
-  _featureLevel(D3D_FEATURE_LEVEL_11_0),
-  
   _initialized(FALSE),
-  _screenRenderTarget(NULL),
-  _screenDepthStencilTarget(NULL),
-
   _width(0),
   _height(0),
   _msMode(0),
   _refreshHz(0),
-  _fullScreenMode(FALSE)
+  _fullScreenMode(FALSE),
+  _featureLevel(D3D_FEATURE_LEVEL_11_0),
+
+  //render targets
+  _screenRenderTarget(NULL),
+  _activeRenderTargetView(NULL),
+  _numRTV(0),
+
+  //depth and stencil targets
+  _screenDepthStencilTarget(NULL),
+  _activeDepthStencilView(NULL),
+  _activeDepthStencilState(NULL),
+
+  //raster states
+  _activeRasterState(NULL)
 {
 }
 
@@ -32,6 +38,9 @@ DirectX::~DirectX()
   DestroyDirectX();
 }
 
+//********************************************************************************************************************//
+//**************************************************SETUP DIRECTX*****************************************************//
+//********************************************************************************************************************//
 bool DirectX::InitDirectX(HWND hWnd, bool fullScreenMode, UINT msMode, UINT width, UINT height, UINT refreshHz)
 {
   _hWnd = hWnd;
@@ -49,7 +58,7 @@ bool DirectX::InitDirectX(HWND hWnd, bool fullScreenMode, UINT msMode, UINT widt
   CreateViewPort((float)width, (float)height);
 
   _dxDeviceContext->OMSetRenderTargets(1, &_screenRenderTarget->renderTargetView, _screenDepthStencilTarget->depthStencilView);
-  //_dxDeviceContext->RSSetState(_dxRasterState);
+  //_dxDeviceContext->RSSetState(_activeRasterState);
   _dxDeviceContext->RSSetViewports(1, &_viewPort);
   _dxDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -105,6 +114,37 @@ bool DirectX::CreateDeviceDX()
   return TRUE;
 }
 
+void DirectX::DestroyDirectX()
+{
+  _initialized = FALSE;
+
+  DESTROY_DX(_dxSwapChain);
+  DESTROY_DX(_dxDeviceContext);
+  DESTROY_DX(_dxDevice);
+  destroyRenderTargets();
+  destroyDSBuffer();
+  destroyShaderManager();
+  destroyTextureManager();
+  
+  WRITE_LOG(L"Release DirectX");
+}
+
+//********************************************************************************************************************//
+//************************************************VIEW PORTS**********************************************************//
+//********************************************************************************************************************//
+void DirectX::CreateViewPort(float width, float height)
+{
+  _viewPort.Width = width;
+  _viewPort.Height = height;
+  _viewPort.MinDepth = 0.0f;
+  _viewPort.MaxDepth = 1.0f;
+  _viewPort.TopLeftX = 0;
+  _viewPort.TopLeftY = 0;
+}
+
+//********************************************************************************************************************//
+//**********************************************RENDER TARGETS********************************************************//
+//********************************************************************************************************************//
 ID3D11RenderTargetView* DirectX::CreateScreenRenderTarget()
 {
   if (_screenRenderTarget)
@@ -230,153 +270,31 @@ void DirectX::destroyRenderTargets()
 {
   for(RenderTargetMap::iterator i = _renderTargets.begin(); i != _renderTargets.end(); ++i)
   {
-    DESTROY_DX((*i).second->renderTexture)
-    DESTROY_DX((*i).second->renderTargetView)
-    DESTROY_DX((*i).second->shaderResource)
+    DESTROY_DX((*i).second->renderTexture);
+    DESTROY_DX((*i).second->renderTargetView);
+    DESTROY_DX((*i).second->shaderResource);
     delete (*i).second;
   }
   _renderTargets.clear();
 
   if (_screenRenderTarget)
   {
-    DESTROY_DX(_screenRenderTarget->renderTexture)
-    DESTROY_DX(_screenRenderTarget->renderTargetView)
+    DESTROY_DX(_screenRenderTarget->renderTexture);
+    DESTROY_DX(_screenRenderTarget->renderTargetView);
     delete _screenRenderTarget;
     _screenRenderTarget = NULL;
   }
 }
 
-bool DirectX::CreateRasterizerState()
+//********************************************************************************************************************//
+//*****************************************DEPTH AND STENCIL TARGETS**************************************************//
+//********************************************************************************************************************//
+void DirectX::SetDepthStencilState(ID3D11DepthStencilState* dsState)
 {
-  D3D11_RASTERIZER_DESC rasterDesc;
-  rasterDesc.AntialiasedLineEnable = FALSE;
-  rasterDesc.CullMode = D3D11_CULL_NONE;
-  rasterDesc.DepthBias = 0;
-  rasterDesc.DepthBiasClamp = 0.0f;
-  rasterDesc.DepthClipEnable = TRUE;
-  rasterDesc.FillMode = D3D11_FILL_SOLID;
-  rasterDesc.FrontCounterClockwise = FALSE;
-  rasterDesc.MultisampleEnable = TRUE;
-  rasterDesc.ScissorEnable = FALSE;
-  rasterDesc.SlopeScaledDepthBias = 0.0f;
-
-  // Create the rasterizer state from the description we just filled out.
-  if (FAILED(_dxDevice->CreateRasterizerState(&rasterDesc, &_dxRasterState)))
-  {
-    WRITE_LOG(L"RasterizerState not init");
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-void DirectX::CreateViewPort(float width, float height)
-{
-  _viewPort.Width = width;
-  _viewPort.Height = height;
-  _viewPort.MinDepth = 0.0f;
-  _viewPort.MaxDepth = 1.0f;
-  _viewPort.TopLeftX = 0;
-  _viewPort.TopLeftY = 0;
-}
-
-void DirectX::DestroyDirectX()
-{
-  _initialized = FALSE;
-
-  DESTROY_DX(_dxSwapChain)
-  destroyRenderTargets();
-  destroyDSBuffer();
-  
-  if (_dxDeviceContext)
-  {
-    _dxDeviceContext->ClearState();
-    _dxDeviceContext->Release();
-    _dxDeviceContext = NULL;
-  }
-
-  DESTROY_DX(_dxDevice)
-
-  destroyShaderManager();
-  destroyTextureManager();
-
-  WRITE_LOG(L"Release DirectX");
-}
-
-DirectX::DepthStencilTarget* DirectX::newDepthStencilTarget()
-{
-  DepthStencilTarget* dst = new DepthStencilTarget();
-  dst->depthStencilTexture = NULL;
-  // Create depth stencil texture
-  D3D11_TEXTURE2D_DESC descDepth;
-  ZeroMemory( &descDepth, sizeof(descDepth) );
-  descDepth.Width = _width;
-  descDepth.Height = _height;
-  descDepth.MipLevels = 1;
-  descDepth.ArraySize = 1;
-  descDepth.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-  descDepth.SampleDesc.Count = _msMode;
-  descDepth.SampleDesc.Quality = 0;
-  descDepth.Usage = D3D11_USAGE_DEFAULT;
-  descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-  descDepth.CPUAccessFlags = 0;
-  descDepth.MiscFlags = 0;
-  if (FAILED(_dxDevice->CreateTexture2D(&descDepth, NULL, &dst->depthStencilTexture)))
-  {
-    WRITE_LOG(L"DepthStencil not init");
-    return FALSE;
-  }
-
-  ID3D11DepthStencilView* dxDepthStencilView = NULL;
-
-  // Create the depth stencil view
-  D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
-  ZeroMemory( &descDSV, sizeof(descDSV) );
-  descDSV.Format = descDepth.Format;
-  if(_msMode > 1)
-    descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
-  else
-    descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-  descDSV.Texture2D.MipSlice = 0;
-  if (FAILED(_dxDevice->CreateDepthStencilView(dst->depthStencilTexture, &descDSV, &dst->depthStencilView)))
-  {
-    WRITE_LOG(L"DepthStencilView not init");
-    return NULL;
-  }
-  return dst;
-}
-
-//Depth and Stencil buffers
-void DirectX::destroyDSBuffer()
-{
-  for(DepthStencilTargetMap::iterator i = _depthStencilTargets.begin(); i != _depthStencilTargets.end(); ++i)
-  {
-    DESTROY_DX((*i).second->depthStencilTexture)
-    DESTROY_DX((*i).second->depthStencilView)
-    delete (*i).second;
-  }
-
-  if (_screenDepthStencilTarget)
-  {
-    DESTROY_DX(_screenDepthStencilTarget->depthStencilTexture)
-    DESTROY_DX(_screenDepthStencilTarget->depthStencilView)
-    delete _screenDepthStencilTarget;
-    _screenDepthStencilTarget = NULL;
-  }
-
-  for(DSStateSet::iterator i = _dsStateVec.begin(); i != _dsStateVec.end(); ++i)
-  {
-    ID3D11DepthStencilState* element = (*i);
-    DESTROY_DX(element)
-  }
-}
-
-void DirectX::SetDepthStencilState(ID3D11DepthStencilState* dss)
-{
-  if (_activeDepthStencilState == dss)
+  if (_activeDepthStencilState == dsState)
     return;
 
-  _activeDepthStencilState = dss;
+  _activeDepthStencilState = dsState;
   _dxDeviceContext->OMSetDepthStencilState(_activeDepthStencilState, 1);
 }
 
@@ -384,7 +302,7 @@ ID3D11DepthStencilView* DirectX::CreateScreenDepthStencilView()
 {
   if (!_screenDepthStencilTarget)
     _screenDepthStencilTarget = newDepthStencilTarget();
-    
+
   return _screenDepthStencilTarget->depthStencilView;
 }
 
@@ -436,7 +354,119 @@ ID3D11DepthStencilState* DirectX::CreateDepthStencilState(bool depthEnable, D3D1
   return dxDepthStencilState;
 }
 
-//DRAW
+DirectX::DepthStencilTarget* DirectX::newDepthStencilTarget()
+{
+  DepthStencilTarget* dst = new DepthStencilTarget();
+  dst->depthStencilTexture = NULL;
+  // Create depth stencil texture
+  D3D11_TEXTURE2D_DESC descDepth;
+  ZeroMemory( &descDepth, sizeof(descDepth) );
+  descDepth.Width = _width;
+  descDepth.Height = _height;
+  descDepth.MipLevels = 1;
+  descDepth.ArraySize = 1;
+  descDepth.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+  descDepth.SampleDesc.Count = _msMode;
+  descDepth.SampleDesc.Quality = 0;
+  descDepth.Usage = D3D11_USAGE_DEFAULT;
+  descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+  descDepth.CPUAccessFlags = 0;
+  descDepth.MiscFlags = 0;
+  if (FAILED(_dxDevice->CreateTexture2D(&descDepth, NULL, &dst->depthStencilTexture)))
+  {
+    WRITE_LOG(L"DepthStencil not init");
+    return FALSE;
+  }
+
+  ID3D11DepthStencilView* dxDepthStencilView = NULL;
+
+  // Create the depth stencil view
+  D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
+  ZeroMemory( &descDSV, sizeof(descDSV) );
+  descDSV.Format = descDepth.Format;
+  if(_msMode > 1)
+    descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+  else
+    descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+  descDSV.Texture2D.MipSlice = 0;
+  if (FAILED(_dxDevice->CreateDepthStencilView(dst->depthStencilTexture, &descDSV, &dst->depthStencilView)))
+  {
+    WRITE_LOG(L"DepthStencilView not init");
+    return NULL;
+  }
+  return dst;
+}
+
+void DirectX::destroyDSBuffer()
+{
+  for(DepthStencilTargetMap::iterator i = _depthStencilTargets.begin(); i != _depthStencilTargets.end(); ++i)
+  {
+    DESTROY_DX((*i).second->depthStencilTexture);
+    DESTROY_DX((*i).second->depthStencilView);
+    delete (*i).second;
+  }
+
+  if (_screenDepthStencilTarget)
+  {
+    DESTROY_DX(_screenDepthStencilTarget->depthStencilTexture);
+    DESTROY_DX(_screenDepthStencilTarget->depthStencilView);
+    delete _screenDepthStencilTarget;
+    _screenDepthStencilTarget = NULL;
+  }
+
+  for(DSStateSet::iterator i = _dsStateVec.begin(); i != _dsStateVec.end(); ++i)
+    DESTROY_DX((*i));
+}
+
+//********************************************************************************************************************//
+//***********************************************RASTER STATES********************************************************//
+//********************************************************************************************************************//
+ID3D11RasterizerState* DirectX::CreateRasterizerState()
+{
+  ID3D11RasterizerState* rsState = NULL;
+  
+  D3D11_RASTERIZER_DESC rasterDesc;
+  rasterDesc.AntialiasedLineEnable = FALSE;
+  rasterDesc.CullMode = D3D11_CULL_NONE;
+  rasterDesc.DepthBias = 0;
+  rasterDesc.DepthBiasClamp = 0.0f;
+  rasterDesc.DepthClipEnable = TRUE;
+  rasterDesc.FillMode = D3D11_FILL_SOLID;
+  rasterDesc.FrontCounterClockwise = FALSE;
+  rasterDesc.MultisampleEnable = TRUE;
+  rasterDesc.ScissorEnable = FALSE;
+  rasterDesc.SlopeScaledDepthBias = 0.0f;
+
+  // Create the rasterizer state from the description we just filled out.
+  if (FAILED(_dxDevice->CreateRasterizerState(&rasterDesc, &rsState)))
+  {
+    WRITE_LOG(L"RasterizerState not init");
+    return NULL;
+  }
+
+  _rsStateVec.insert(rsState);
+
+  return rsState;
+}
+
+void DirectX::SetRasterizerState(ID3D11RasterizerState* rsState)
+{
+  if (_activeRasterState == rsState)
+    return;
+
+  _activeRasterState = rsState;
+  _dxDeviceContext->RSSetState(_activeRasterState);
+}
+
+void DirectX::destroyRSStates()
+{
+  for(RSStateSet::iterator i = _rsStateVec.begin(); i != _rsStateVec.end(); ++i)
+    DESTROY_DX((*i));
+}
+
+//********************************************************************************************************************//
+//***********************************************DRAW DIRECTX*********************************************************//
+//********************************************************************************************************************//
 void DirectX::ClearAllRenderTargets()
 {
   for(RenderTargetMap::iterator i = _renderTargets.begin(); i != _renderTargets.end(); ++i)
@@ -473,22 +503,12 @@ void DirectX::Present(bool vSync)
   _dxSwapChain->Present(vSync, 0);
 }
 
-//SHADER MANAGER
-void DirectX::destroyShaderManager()
-{
-  for(ShaderMap::iterator i = _vertexShaders.begin(); i != _vertexShaders.end(); ++i)
-    delete (*i).second;
-
-  for(ShaderMap::iterator i = _pixelShaders.begin(); i != _pixelShaders.end(); ++i)
-    delete (*i).second;
-
-  _vertexShaders.clear();
-  _pixelShaders.clear();
-}
-
+//********************************************************************************************************************//
+//**************************************************SHADERS***********************************************************//
+//********************************************************************************************************************//
 VertexShader* DirectX::GetVertexShader(const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName)
 {
-  int hash = getShaderHash(path, type, funcName);
+  UINT hash = getShaderHash(path, type, funcName);
   ShaderMap::iterator i = _vertexShaders.find(hash);
   if (i != _vertexShaders.end())
     return (*i).second->AsVertexShader();
@@ -505,7 +525,7 @@ VertexShader* DirectX::GetVertexShader(const wchar_t* path, VertexShader::TypeVe
 
 void DirectX::RegistrationVertexShader(VertexShader* vs)
 {
-  int hash = getShaderHash(vs->GetPath(), vs->GetType(), vs->GetFuncName());
+  UINT hash = getShaderHash(vs->GetPath(), vs->GetType(), vs->GetFuncName());
   ShaderMap::iterator i = _vertexShaders.find(hash);
   if (i != _vertexShaders.end())
     return;
@@ -518,7 +538,7 @@ void DirectX::RegistrationVertexShader(VertexShader* vs)
 
 PixelShader* DirectX::GetPixelShader(const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName)
 {
-  int hash = getShaderHash(path, type, funcName);
+  UINT hash = getShaderHash(path, type, funcName);
   ShaderMap::iterator i = _pixelShaders.find(hash);
   if (i != _pixelShaders.end())
     return (*i).second->AsPixelShader();
@@ -535,7 +555,7 @@ PixelShader* DirectX::GetPixelShader(const wchar_t* path, PixelShader::TypePixel
 
 void DirectX::RegistrationPixelShader(PixelShader* ps)
 {
-  int hash = getShaderHash(ps->GetPath(), ps->GetType(), ps->GetFuncName());
+  UINT hash = getShaderHash(ps->GetPath(), ps->GetType(), ps->GetFuncName());
   ShaderMap::iterator i = _pixelShaders.find(hash);
   if (i != _pixelShaders.end())
     return;
@@ -544,6 +564,18 @@ void DirectX::RegistrationPixelShader(PixelShader* ps)
     ps->CompileShader();
   _pixelShaders[hash] = ps;
   return;
+}
+
+void DirectX::destroyShaderManager()
+{
+  for(ShaderMap::iterator i = _vertexShaders.begin(); i != _vertexShaders.end(); ++i)
+    delete (*i).second;
+
+  for(ShaderMap::iterator i = _pixelShaders.begin(); i != _pixelShaders.end(); ++i)
+    delete (*i).second;
+
+  _vertexShaders.clear();
+  _pixelShaders.clear();
 }
 
 UINT DirectX::getShaderHash(const wchar_t* path, DWORD type, const char* funcName)
@@ -555,20 +587,9 @@ UINT DirectX::getShaderHash(const wchar_t* path, DWORD type, const char* funcNam
   return hash;
 }
 
-void DirectX::destroyTextureManager()
-{
-  for(TextureMap::iterator i = _textures.begin(); i != _textures.end(); ++i)
-    delete (*i).second.texture;
-  _textures.clear();
-
-  for(SamplerSet::iterator i = _samplers.begin(); i != _samplers.end(); ++i)
-  {
-    ID3D11SamplerState* sampler = (*i);
-    DESTROY_DX(sampler);
-  }
-  _samplers.clear();
-}
-
+//********************************************************************************************************************//
+//**********************************************TEXTURE MANAGER*******************************************************//
+//********************************************************************************************************************//
 Texture* DirectX::GetTexture(const wchar_t* path)
 {
   int hash = getTextureHash(path);
@@ -640,6 +661,18 @@ void DirectX::RemoveTexture(Texture* texture)
       return;
     }
   }
+}
+
+void DirectX::destroyTextureManager()
+{
+  for(TextureMap::iterator i = _textures.begin(); i != _textures.end(); ++i)
+    delete (*i).second.texture;
+  _textures.clear();
+
+  for(SamplerSet::iterator i = _samplers.begin(); i != _samplers.end(); ++i)
+    DESTROY_DX((*i));
+
+  _samplers.clear();
 }
 
 UINT DirectX::getTextureHash(const wchar_t* path)
