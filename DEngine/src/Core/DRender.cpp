@@ -167,7 +167,7 @@ void Render::OutputUpdate()
 {
   InputStruct is = _input.GetInputStruct();
   _cs.Lock();
-  for(OCSet::iterator it = _outputs.begin(); it != _outputs.end(); ++it)
+  for(OutputClasses::Set::iterator it = _outputs.begin(); it != _outputs.end(); ++it)
   {
     OutputClass* outputClass = (*it);
     if (outputClass->GetActive())

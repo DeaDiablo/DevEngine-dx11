@@ -1,8 +1,6 @@
 #ifndef DEV_RENDER_H
 #define DEV_RENDER_H
 
-#include <set>
-
 #include <Core/DSystemLib.h>
 #include <Element/DScene.h>
 #include <GUI/DWindow.h>
@@ -10,8 +8,6 @@
 
 namespace dev
 {
-  typedef std::set<OutputClass*> OCSet;
-
   class Render
   {
   public:
@@ -48,7 +44,7 @@ namespace dev
     HWND      _hWnd;
 
     Scene*    _scene;
-    OCSet     _outputs;
+    OutputClasses::Set _outputs;
 
     HANDLE    _renderThread;
     bool      _stopRender;

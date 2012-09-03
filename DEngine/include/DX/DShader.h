@@ -1,8 +1,6 @@
 #ifndef DEV_SHADER_H
 #define DEV_SHADER_H
 
-#include <map>
-
 #include <Core/DInclude.h>
 #include <Core/DSettings.h>
 #include <DX/DBuffer.h>
@@ -100,7 +98,7 @@ namespace dev
     virtual ~VertexShader();
 
     virtual bool CompileShader();
-    virtual bool CreateLaout(Buffer::BufferType BT_Type);
+    virtual bool CreateLayout(Buffer::BufferType BT_Type);
     virtual bool SetShader();
 
     inline const Buffer::BufferType& GetBufferType() const
@@ -180,47 +178,12 @@ namespace dev
     int _startSRSlot, _numSRSlot;
   };
 
-  class ShaderPass
+  struct ShaderStruct
   {
-  public:
-    ShaderPass(UINT orderPass);
-    virtual ~ShaderPass();
-
-    void SetVertexShader(const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName);
-    void SetVertexShader(VertexShader* vs);
-    inline VertexShader* GetVertexShader() 
-    { 
-      return _vShader; 
-    }
-
-    void SetBufferType(Buffer::BufferType BT_Type);
-    inline const Buffer::BufferType& GetType() const
-    {
-      return _type;
-    }
-
-    void SetPixelShader(const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName);
-    void SetPixelShader(PixelShader* ps);
-    inline PixelShader* GetPixelShader() 
-    { 
-      return _pShader; 
-    }
-
-    inline UINT GetOrderPass() const
-    {
-      return _orderPass;
-    }
-
-  protected:
-    void setLayout();
-    UINT _orderPass;
-
-    Buffer::BufferType _type;
-    VertexShader* _vShader;
-    PixelShader*  _pShader;
+    ShaderStruct() : vs(NULL), ps(NULL) {}
+    VertexShader* vs;
+    PixelShader*  ps;
   };
-
-  typedef std::map<UINT, ShaderPass*> ShaderPassMap;
 }
 
 #endif

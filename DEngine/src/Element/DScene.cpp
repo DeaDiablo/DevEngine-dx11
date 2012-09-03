@@ -40,18 +40,30 @@ Camera* Scene::GetActiveCamera()
   return _cameraActive;
 }
 
-void Scene::AddElement(Element* element)
+void Scene::AddElement(Element* element, bool update)
 {
-  _listUpdate.push_back(element);
+  _listElements.insert(element);
+  if (update)
+    _listUpdate.insert(element);
   addElement(element);
+}
+
+
+void Scene::SetElementUpdate(Element* element, bool update)
+{
+  if (_listElements.find(element) == _listElements.end())
+    return;
+
+  if (update)
+    _listUpdate.insert(element);
+  else
+    _listUpdate.erase(element);
 }
 
 void Scene::RemoveElement(Element* element)
 {
-  for (ElementVec::iterator i = _listUpdate.begin(); i != _listUpdate.end(); ++i)
-    if ((*i) == element)
-      _listUpdate.erase(i);
-
+  _listElements.erase(element);
+  _listUpdate.erase(element);
   removeElement(element);
 }
 
@@ -60,15 +72,12 @@ void Scene::Update()
   if (_cameraActive)
     _cameraActive->Update();
 
-  for (ElementVec::iterator i = _listUpdate.begin(); i != _listUpdate.end(); ++i)
+  for (Elements::Set::iterator i = _listUpdate.begin(); i != _listUpdate.end(); ++i)
     (*i)->Update(_matrix);
 }
 
 void Scene::Draw(bool vSync)
 {
-  //_currentVS = NULL;
-  //_currentPS = NULL;
-
   DX.ClearAllRenderTargets();
   DX.ClearAllDepthStencil();
 
@@ -93,7 +102,8 @@ void Scene::Draw(bool vSync)
       _currentPS = ds.ps;
     }
 
-    ds.element->DrawElement();
+    for(Elements::Set::iterator i = ds.elements.begin(); i != ds.elements.end(); i++)
+      (*i)->DrawElement();
   }
 
   DX.Present(vSync);
@@ -111,10 +121,10 @@ void Scene::addElement(Element* element)
   for (ShaderPassMap::iterator i = shaderPasses.begin(); i != shaderPasses.end(); ++i)
   {
     DrawStruct newElement;
-    newElement.element  = element;
-    newElement.orderNum = (*i).second->GetOrderPass();
-    newElement.vs       = (*i).second->GetVertexShader();
-    newElement.ps       = (*i).second->GetPixelShader();
+    newElement.elements.insert(element);
+    newElement.orderNum = (*i).first;
+    newElement.vs       = (*i).second.vs;
+    newElement.ps       = (*i).second.ps;
 
     for (DrawStructVec::iterator i = _drawVec.begin(); i != _drawVec.end(); ++i)
     {
@@ -131,12 +141,8 @@ void Scene::addElement(Element* element)
               {
                 if (ds.vs == newElement.vs)
                 {
-                  if ((ds.element->GetPosition() - _cameraActive->GetPosition()).Length() >= 
-                    (element->GetPosition() - _cameraActive->GetPosition()).Length())
-                  {
-                    _drawVec.insert(i, newElement);
-                    return;
-                  }
+                  ds.elements.insert(element);
+                  continue;
                 }
                 else
                 {
@@ -169,10 +175,13 @@ void Scene::removeElement(Element* element)
     return;
 
   for (DrawStructVec::iterator i = _drawVec.begin(); i != _drawVec.end(); ++i)
-    if ((*i).element == element)
+  {
+    if ((*i).elements.find(element) != (*i).elements.end())
     {
-      _drawVec.erase(i);
+      (*i).elements.erase(element);
+      if ((*i).elements.empty())
+        _drawVec.erase(i);
       return;
     }
+  }
 }
-

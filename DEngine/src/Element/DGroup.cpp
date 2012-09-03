@@ -16,7 +16,7 @@ Group::Group() :
 
 Group::~Group()
 {
-  for (ElementVec::iterator i = _elements.begin(); i != _elements.end(); ++i)
+  for (Elements::Vec::iterator i = _elements.begin(); i != _elements.end(); ++i)
     delete (*i);
   ClearList();
 }
@@ -43,7 +43,7 @@ void Group::InsertElement(UINT num, Element* element)
     _elements.push_back(element);
   else
     _elements.insert(_elements.begin() + num, element);
-  element->SetParent(this);
+  element->setParent(this);
 }
 
 void Group::SetElement(UINT num, Element* element)
@@ -55,8 +55,8 @@ void Group::SetElement(UINT num, Element* element)
   {
     Element* oldElement = _elements[num];
     _elements[num] = element;
-    oldElement->ClearParent();
-    element->SetParent(this);
+    oldElement->clearParent();
+    element->setParent(this);
   }
 }
 
@@ -69,9 +69,9 @@ void Group::ReplaceElement(Element* element, Element* newElement)
   
   if (num != _elements.size())
   {
-    element->ClearParent();
+    element->clearParent();
     _elements[num] = newElement;
-    newElement->SetParent(this);
+    newElement->setParent(this);
   }
 }
 
@@ -84,7 +84,7 @@ void Group::RemoveElement(Element* element)
   if (num != _elements.size())
   {
     _elements.erase(_elements.begin() + num);
-    element->ClearParent();
+    element->clearParent();
   }
 }
 
@@ -93,18 +93,16 @@ void Group::RemoveElement(UINT num)
   if (num < _elements.size())
   {
     Element* element = GetElement(num);
-    element->ClearParent();
+    element->clearParent();
     _elements.erase(_elements.begin() + num);
   }
 }
 
 void Group::RemoveAllElements()
 {
-  for (ElementVec::iterator i = _elements.begin(); i != _elements.end(); ++i)
-  {
-    (*i)->ClearParent();
-    _elements.erase(i);
-  }
+  for (Elements::Vec::iterator i = _elements.begin(); i != _elements.end(); ++i)
+    (*i)->clearParent();
+  _elements.clear();
 }
 
 void Group::Update(const Matrix& matrix)
@@ -124,7 +122,11 @@ void Group::DrawElement()
     return;
 
   for (UINT i = 0; i < _elements.size(); ++i)
-    _elements[i]->DrawElement();
+  {
+    Element* element = _elements[i];
+    if (element->GetShaderPasses().empty())
+      element->DrawElement();
+  }
 }
 
 void Group::updateParent(Message msg)
@@ -133,7 +135,7 @@ void Group::updateParent(Message msg)
   {
   case UPDATE_BUFFER_TYPE:
     {
-      for (ElementVec::iterator i = _elements.begin(); i != _elements.end(); ++i)
+      for (Elements::Vec::iterator i = _elements.begin(); i != _elements.end(); ++i)
       {
         if ((*i)->GetShaderPasses().empty() && (*i)->GetBufferType() != Buffer::BT_NONE)
         {

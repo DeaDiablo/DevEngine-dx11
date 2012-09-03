@@ -162,7 +162,7 @@ bool VertexShader::CompileShader()
   return TRUE;
 }
 
-bool VertexShader::CreateLaout(Buffer::BufferType BT_Type)
+bool VertexShader::CreateLayout(Buffer::BufferType BT_Type)
 {
   if (!_blob)
     return FALSE;
@@ -395,55 +395,4 @@ void PixelShader::updateNumShaderResources()
       break;
     }
   }
-}
-
-ShaderPass::ShaderPass(UINT orderPass) :
-  _orderPass(orderPass),
-  _vShader(NULL),
-  _pShader(NULL),
-  _type(Buffer::BT_NONE)
-{
-}
-
-ShaderPass::~ShaderPass()
-{
-}
-
-void ShaderPass::SetVertexShader(const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName)
-{
-  _vShader = DX.GetVertexShader(path, type, funcName);
-
-  if (_type != Buffer::BT_NONE)
-    setLayout();
-}
-
-void ShaderPass::SetVertexShader(VertexShader* vs)
-{
-  _vShader = vs;
-  DX.RegistrationVertexShader(vs);
-}
-
-void ShaderPass::SetBufferType(Buffer::BufferType BT_Type)
-{
-  _type = BT_Type;
-
-  if (_vShader)
-    setLayout();
-}
-
-void ShaderPass::SetPixelShader(const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName)
-{
-  _pShader = DX.GetPixelShader(path, type, funcName);
-}
-
-void ShaderPass::SetPixelShader(PixelShader* ps)
-{
-  _pShader = ps;
-  DX.RegistrationPixelShader(ps);
-}
-
-void ShaderPass::setLayout()
-{
-  if (!_vShader->CreateLaout(_type))
-    _type = Buffer::BT_NONE;
 }

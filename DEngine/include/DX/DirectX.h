@@ -1,9 +1,6 @@
 #ifndef DEV_DIRECT_X_H
 #define DEV_DIRECT_X_H
 
-#include <set>
-#include <map>
-
 #include <DX/DShader.h>
 #include <DX/DTexture.h>
 #include <Core/DInclude.h>

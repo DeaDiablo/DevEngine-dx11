@@ -1,6 +1,11 @@
 #ifndef DEV_INCLUDE_H
 #define DEV_INCLUDE_H
 
+//STL 
+#include <vector>
+#include <set>
+#include <map>
+
 //debug include
 #ifdef _DEBUG
   #define _CRTDBG_MAP_ALLOC
@@ -21,5 +26,22 @@
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dx11.lib")
+
+namespace dev
+{
+  class OutputClass;
+  class Element;
+  
+  namespace Elements
+  {
+    typedef std::set<Element*>      Set;
+    typedef std::vector<Element*>   Vec;
+  };
+
+  namespace OutputClasses
+  {
+    typedef std::set<OutputClass*>  Set;
+  }
+}
 
 #endif

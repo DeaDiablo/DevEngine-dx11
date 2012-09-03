@@ -1,8 +1,6 @@
 #ifndef DEV_ELEMENT_H
 #define DEV_ELEMENT_H
 
-#include <vector>
-
 #include <Core/DInclude.h>
 #include <Core/DSettings.h>
 #include <Math/DMatrix.h>
@@ -14,6 +12,9 @@ namespace dev
   class Model;
   class Mesh;
   class Group;
+  class Scene;
+
+  typedef std::map<UINT, ShaderStruct> ShaderPassMap;
 
   class Element
   {
@@ -51,12 +52,10 @@ namespace dev
       return _rotation();
     }
 
-    void SetParent(Element* parent);
     inline const Element* GetParent() const
     {
       return _parent;
     }
-    void ClearParent();
 
     inline Matrix GetMatrix() const
     {
@@ -85,33 +84,34 @@ namespace dev
     virtual void SetVertexShader(UINT passNum, VertexShader* vs);
     virtual void SetPixelShader(UINT passNum, const wchar_t* path, PixelShader::TypePixelShader type = PixelShader::PS_4_0, const char* funcName = DEFAULT_PS_FUNCTION);
     virtual void SetPixelShader(UINT passNum, PixelShader* ps);
+    virtual void SetShaders(UINT passNum, VertexShader* vs, PixelShader* ps);
 
     Buffer::BufferType GetBufferType() const
     {
       return _type;   
     }
 
-    inline ShaderPassMap GetShaderPasses() 
+    inline ShaderPassMap& GetShaderPasses() 
     { 
       return _shaderPasses;
     }
 
-    inline ShaderPass* GetShaderPass(UINT passNum) 
+    inline ShaderStruct& GetShaderPass(UINT passNum) 
     { 
-      return _shaderPasses[passNum]; 
+      return _shaderPasses[passNum];
     }
 
     inline VertexShader* GetVertexShader(UINT passNum) 
     { 
       if (_shaderPasses.find(passNum) != _shaderPasses.end())
-        return _shaderPasses[passNum]->GetVertexShader(); 
+        return _shaderPasses[passNum].vs; 
       return NULL;
     }
 
     inline PixelShader* GetPixelShader(UINT passNum) 
     { 
       if (_shaderPasses.find(passNum) != _shaderPasses.end())
-        return _shaderPasses[passNum]->GetPixelShader(); 
+        return _shaderPasses[passNum].ps; 
       return NULL;
     }
 
@@ -121,6 +121,14 @@ namespace dev
     {
       UPDATE_BUFFER_TYPE = 0
     };
+
+    ShaderPassMap _shaderPasses;
+
+    virtual void setVertexShader(UINT passNum, VertexShader* vs);
+    virtual void setPixelShader(UINT passNum, PixelShader* ps);
+
+    void setParent(Element* parent);
+    void clearParent();
     virtual void updateParent(Message msg);
 
     virtual void setBufferType(Buffer::BufferType BT_Type);
@@ -137,16 +145,11 @@ namespace dev
     Matrix              _matrix;
     Element*            _parent;
 
-    ShaderPassMap       _shaderPasses;
-    bool                _protectedShader;
-
     Buffer::BufferType      _type;
     Buffer::ConstantBuffer* _wBuffer;
 
     friend Group;
   };
-
-  typedef std::vector<Element*> ElementVec;
 }
 
 #endif

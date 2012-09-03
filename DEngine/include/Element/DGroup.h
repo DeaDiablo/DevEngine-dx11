@@ -56,7 +56,8 @@ namespace dev
   protected:
     virtual void updateParent(Message msg);
     Element*    _element;
-    ElementVec  _elements;
+    Elements::Vec  _elements;
+
   };
 }
 

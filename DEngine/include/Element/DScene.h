@@ -18,7 +18,8 @@ namespace dev
     void SetActiveCamera(Camera* camera);
     Camera* GetActiveCamera();
 
-    void AddElement(Element* element);
+    void AddElement(Element* element, bool update = true);
+    void SetElementUpdate(Element* element, bool update);
     void RemoveElement(Element* element);
 
     virtual void Update();
@@ -27,22 +28,22 @@ namespace dev
   protected:
     void addElement(Element* element);
     void removeElement(Element* element);
-
     Camera* _cameraActive;
-    
-    Matrix      _matrix;
-    ElementVec  _listUpdate;
+
+    Elements::Set  _listUpdate, _listElements;
+    Matrix        _matrix;
 
     VertexShader* _currentVS;
     PixelShader*  _currentPS;
 
+
     Buffer::ConstantBuffer* _wBuffer;
     Buffer::ConstantBuffer* _vpBuffer;
-    
+
     struct DrawStruct
     {
-      Element*      element;
-      UINT  orderNum;
+      Elements::Set elements;
+      UINT          orderNum;
       VertexShader* vs;
       PixelShader*  ps;
     };

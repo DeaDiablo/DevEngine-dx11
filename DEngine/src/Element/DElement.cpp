@@ -2,6 +2,7 @@
 
 #include <DX/DConstBuffers.h>
 #include <DX/DirectX.h>
+#include <Element/DGroup.h>
 
 using namespace dev;
 
@@ -19,8 +20,6 @@ Element::Element(const Vec3& position, const Vec3& rotation, const Vec3& scale) 
 Element::~Element()
 {
   Buffer::WorldConstBuffer::Unregister();
-  for(ShaderPassMap::iterator i = _shaderPasses.begin(); i != _shaderPasses.end(); ++i)
-    delete (*i).second;
 }
 
 void Element::SetVisible(bool value)
@@ -68,61 +67,79 @@ void Element::SetRotation(const Vec3& value)
   _rotation = value;
 }
 
-void Element::SetParent(Element* parent)
+void Element::setParent(Element* parent)
 {
-  _parent = parent;
+  if (_parent == parent)
+    return;
 
+  _parent = parent;
   updateParent(UPDATE_BUFFER_TYPE);
 }
 
-void Element::ClearParent()
+void Element::clearParent()
 {
-  _parent = NULL;
+  if (!_parent)
+    return;
 
+  _parent = NULL;
   updateParent(UPDATE_BUFFER_TYPE);
 }
 
 void Element::SetVertexShader(UINT passNum, const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName)
 {
-  if (_shaderPasses.find(passNum) == _shaderPasses.end())
-    _shaderPasses[passNum] = new ShaderPass(passNum);
-  
-  _shaderPasses[passNum]->SetVertexShader(path, type, funcName);
-  
-  if (_type != Buffer::BT_NONE)
-    _shaderPasses[passNum]->SetBufferType(_type);
-
-  updateParent(UPDATE_BUFFER_TYPE);
+  setVertexShader(passNum, DX.GetVertexShader(path, type, funcName));
 }
 
 void Element::SetVertexShader(UINT passNum, VertexShader* vs)
 {
+  DX.RegistrationVertexShader(vs);
+  setVertexShader(passNum, vs);
+}
+
+void Element::setVertexShader(UINT passNum, VertexShader* vs)
+{
   if (_shaderPasses.find(passNum) == _shaderPasses.end())
-    _shaderPasses[passNum] = new ShaderPass(passNum);
+    _shaderPasses[passNum] = ShaderStruct();
 
-  _shaderPasses[passNum]->SetVertexShader(vs);
+  ShaderStruct& ss = _shaderPasses[passNum];
 
-  if (_type != Buffer::BT_NONE)
-    _shaderPasses[passNum]->SetBufferType(_type);
+  if (ss.vs != vs)
+  {
+    ss.vs = vs;
 
-  updateParent(UPDATE_BUFFER_TYPE);
+    if (_type != Buffer::BT_NONE && ss.vs->GetBufferType() == Buffer::BT_NONE)
+      ss.vs->CreateLayout(_type);
+
+    updateParent(UPDATE_BUFFER_TYPE);
+  }
 }
 
 void Element::SetPixelShader(UINT passNum, const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName)
 {
-  if (_shaderPasses.find(passNum) == _shaderPasses.end())
-    _shaderPasses[passNum] = new ShaderPass(passNum);
-  
-  _shaderPasses[passNum]->SetPixelShader(path, type, funcName);
+  setPixelShader(passNum, DX.GetPixelShader(path, type, funcName));
 }
 
 void Element::SetPixelShader(UINT passNum, PixelShader* ps)
 {
-  if (_shaderPasses.find(passNum) == _shaderPasses.end())
-    _shaderPasses[passNum] = new ShaderPass(passNum);
-
-  _shaderPasses[passNum]->SetPixelShader(ps);
+  DX.RegistrationPixelShader(ps);
+  setPixelShader(passNum, ps);
 }
+
+void Element::setPixelShader(UINT passNum, PixelShader* ps)
+{
+  if (_shaderPasses.find(passNum) == _shaderPasses.end())
+    _shaderPasses[passNum] = ShaderStruct();
+
+  ShaderStruct& ss = _shaderPasses[passNum];
+  ss.ps = ps;
+}
+
+void Element::SetShaders(UINT passNum, VertexShader* vs, PixelShader* ps)
+{
+  SetVertexShader(passNum, vs);
+  SetPixelShader(passNum, ps);
+}
+
 
 void Element::Update(const Matrix& matrix)
 {
@@ -149,9 +166,15 @@ void Element::setBufferType(Buffer::BufferType BT_Type)
     return;
 
   _type = BT_Type;
-  
+
+  if (_type == Buffer::BT_NONE)
+    return;
+
   for(ShaderPassMap::iterator i = _shaderPasses.begin(); i != _shaderPasses.end(); ++i)
-    (*i).second->SetBufferType(BT_Type);
+  {
+    if ((*i).second.vs->GetBufferType() == Buffer::BT_NONE)
+      (*i).second.vs->CreateLayout(_type);
+  }
 }
 
 void Element::draw()
