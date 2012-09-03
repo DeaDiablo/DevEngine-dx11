@@ -1,13 +1,13 @@
 #ifndef DEV_SCENE_H
 #define DEV_SCENE_H
 
-#include <Element/DElement.h>
+#include <Element/DGroup.h>
 
 namespace dev
 {
   class Camera;
   class Mesh;
-  
+
   class Scene
   {
   public:
@@ -28,10 +28,12 @@ namespace dev
   protected:
     void addElement(Element* element);
     void removeElement(Element* element);
+    void addElementShaderPass(Element* element, const UINT& numPass, const ShaderStruct& shaderStruct);
+    void removeElementShaderPass(Element* element, const UINT& numPass, const ShaderStruct& shaderStruct);
     Camera* _cameraActive;
 
     Elements::Set  _listUpdate, _listElements;
-    Matrix        _matrix;
+    static Matrix _matrix;
 
     VertexShader* _currentVS;
     PixelShader*  _currentPS;
@@ -49,6 +51,8 @@ namespace dev
     };
     typedef std::vector<DrawStruct> DrawStructVec;
     DrawStructVec _drawVec;
+
+    friend Element;
   };
 }
 

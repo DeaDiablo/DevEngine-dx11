@@ -2,12 +2,13 @@
 
 #include <DX/DConstBuffers.h>
 #include <DX/DirectX.h>
-#include <Element/DGroup.h>
+#include <Element/DScene.h>
 
 using namespace dev;
 
 Element::Element(const Vec3& position, const Vec3& rotation, const Vec3& scale) :
   _parent(NULL),
+  _scene(FALSE),
   _type(Buffer::BT_NONE)
 {
   SetVisible(TRUE);
@@ -73,6 +74,10 @@ void Element::setParent(Element* parent)
     return;
 
   _parent = parent;
+  
+  if(_parent)
+    setScene(_parent->_scene);
+
   updateParent(UPDATE_BUFFER_TYPE);
 }
 
@@ -82,6 +87,7 @@ void Element::clearParent()
     return;
 
   _parent = NULL;
+
   updateParent(UPDATE_BUFFER_TYPE);
 }
 
@@ -105,12 +111,18 @@ void Element::setVertexShader(UINT passNum, VertexShader* vs)
 
   if (ss.vs != vs)
   {
+    if(_scene)
+      _scene->removeElementShaderPass(this, passNum, ss);
+
     ss.vs = vs;
 
     if (_type != Buffer::BT_NONE && ss.vs->GetBufferType() == Buffer::BT_NONE)
       ss.vs->CreateLayout(_type);
 
     updateParent(UPDATE_BUFFER_TYPE);
+
+    if (_scene)
+      _scene->addElementShaderPass(this, passNum, ss);
   }
 }
 
@@ -131,7 +143,16 @@ void Element::setPixelShader(UINT passNum, PixelShader* ps)
     _shaderPasses[passNum] = ShaderStruct();
 
   ShaderStruct& ss = _shaderPasses[passNum];
-  ss.ps = ps;
+  if(ss.ps != ps)
+  {
+    if(_scene)
+      _scene->removeElementShaderPass(this, passNum, ss);
+    
+    ss.ps = ps;
+
+    if (_scene)
+      _scene->addElementShaderPass(this, passNum, ss);
+  }
 }
 
 void Element::SetShaders(UINT passNum, VertexShader* vs, PixelShader* ps)
@@ -194,4 +215,15 @@ void Element::updateParent(Message msg)
 {
   if (_parent)
     _parent->updateParent(msg);
+}
+
+void Element::setScene(Scene* scene)
+{
+  _scene = scene;
+
+  if (_scene)
+  {
+    for (ShaderPassMap::iterator i = _shaderPasses.begin(); i != _shaderPasses.end(); ++i)
+      _scene->addElementShaderPass(this, (*i).first, (*i).second);
+  }
 }

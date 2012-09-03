@@ -148,3 +148,11 @@ void Group::updateParent(Message msg)
   }
   Element::updateParent(msg);
 }
+
+void Group::setScene(Scene* scene)
+{
+  Element::setScene(scene);
+
+  for (UINT i = 0; i < _elements.size(); ++i)
+    _elements[i]->setScene(scene);
+}

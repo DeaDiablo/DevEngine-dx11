@@ -8,10 +8,11 @@
 
 using namespace dev;
 
+Matrix Scene::_matrix = Matrix::identity();
+
 Scene::Scene() :
   _cameraActive(NULL)
 {
-  _matrix = Matrix::identity();
   _wBuffer = Buffer::WorldConstBuffer::Register();
   _vpBuffer = Buffer::ViewProjectionConstBuffer::Register();
 }
@@ -19,7 +20,6 @@ Scene::Scene() :
 Scene::Scene(Camera* camera) :
   _cameraActive(camera)
 {
-  _matrix = Matrix::identity();
   _wBuffer = Buffer::WorldConstBuffer::Register();
   _vpBuffer = Buffer::ViewProjectionConstBuffer::Register();
 }
@@ -42,6 +42,7 @@ Camera* Scene::GetActiveCamera()
 
 void Scene::AddElement(Element* element, bool update)
 {
+  element->setScene(this);
   _listElements.insert(element);
   if (update)
     _listUpdate.insert(element);
@@ -62,6 +63,7 @@ void Scene::SetElementUpdate(Element* element, bool update)
 
 void Scene::RemoveElement(Element* element)
 {
+  element->setScene(NULL);
   _listElements.erase(element);
   _listUpdate.erase(element);
   removeElement(element);
@@ -114,59 +116,12 @@ void Scene::addElement(Element* element)
   if (!element)
     return;
 
-  ShaderPassMap shaderPasses = element->GetShaderPasses();
+  ShaderPassMap& shaderPasses = element->GetShaderPasses();
   if (shaderPasses.empty())
     return;
 
   for (ShaderPassMap::iterator i = shaderPasses.begin(); i != shaderPasses.end(); ++i)
-  {
-    DrawStruct newElement;
-    newElement.elements.insert(element);
-    newElement.orderNum = (*i).first;
-    newElement.vs       = (*i).second.vs;
-    newElement.ps       = (*i).second.ps;
-
-    for (DrawStructVec::iterator i = _drawVec.begin(); i != _drawVec.end(); ++i)
-    {
-      DrawStruct& ds = (*i);
-      if (ds.orderNum >= newElement.orderNum)
-      {
-        if (ds.orderNum == newElement.orderNum)
-        {
-          if (ds.ps <= newElement.ps)
-          {
-            if (ds.ps == newElement.ps)
-            {
-              if (ds.vs <= newElement.vs)
-              {
-                if (ds.vs == newElement.vs)
-                {
-                  ds.elements.insert(element);
-                  continue;
-                }
-                else
-                {
-                  _drawVec.insert(i, newElement);
-                  return;
-                }
-              }
-            }
-            else
-            {
-              _drawVec.insert(i, newElement);
-              return;
-            }
-          }
-        }
-        else
-        {
-          _drawVec.insert(i, newElement);
-          return;
-        }
-      }
-    }
-    _drawVec.push_back(newElement);
-  }
+    addElementShaderPass(element, (*i).first, (*i).second);
 }
 
 void Scene::removeElement(Element* element)
@@ -174,9 +129,68 @@ void Scene::removeElement(Element* element)
   if (!element)
     return;
 
+  ShaderPassMap& shaderPasses = element->GetShaderPasses();
+  if (shaderPasses.empty())
+    return;
+
+  for (ShaderPassMap::iterator i = shaderPasses.begin(); i != shaderPasses.end(); ++i)
+    removeElementShaderPass(element, (*i).first, (*i).second);
+}
+
+void Scene::addElementShaderPass(Element* element, const UINT& numPass, const ShaderStruct& shaderStruct)
+{
+  DrawStruct newElement;
+  newElement.elements.insert(element);
+  newElement.orderNum = numPass;
+  newElement.vs       = shaderStruct.vs;
+  newElement.ps       = shaderStruct.ps;
   for (DrawStructVec::iterator i = _drawVec.begin(); i != _drawVec.end(); ++i)
   {
-    if ((*i).elements.find(element) != (*i).elements.end())
+    DrawStruct& ds = (*i);
+    if (ds.orderNum >= newElement.orderNum)
+    {
+      if (ds.orderNum == newElement.orderNum)
+      {
+        if (ds.ps <= newElement.ps)
+        {
+          if (ds.ps == newElement.ps)
+          {
+            if (ds.vs <= newElement.vs)
+            {
+              if (ds.vs == newElement.vs)
+              {
+                ds.elements.insert(element);
+                continue;
+              }
+              else
+              {
+                _drawVec.insert(i, newElement);
+                return;
+              }
+            }
+          }
+          else
+          {
+            _drawVec.insert(i, newElement);
+            return;
+          }
+        }
+      }
+      else
+      {
+        _drawVec.insert(i, newElement);
+        return;
+      }
+    }
+  }
+  _drawVec.push_back(newElement);
+}
+
+void Scene::removeElementShaderPass(Element* element, const UINT& numPass, const ShaderStruct& shaderStruct)
+{
+  for (DrawStructVec::iterator i = _drawVec.begin(); i != _drawVec.end(); ++i)
+  {
+    if ((*i).orderNum == numPass && (*i).ps == shaderStruct.ps && (*i).vs == shaderStruct.vs)
     {
       (*i).elements.erase(element);
       if ((*i).elements.empty())

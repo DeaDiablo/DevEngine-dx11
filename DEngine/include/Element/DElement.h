@@ -148,7 +148,12 @@ namespace dev
     Buffer::BufferType      _type;
     Buffer::ConstantBuffer* _wBuffer;
 
+    virtual void setScene(Scene* scene);
+
+    Scene* _scene;
+
     friend Group;
+    friend Scene;
   };
 }
 

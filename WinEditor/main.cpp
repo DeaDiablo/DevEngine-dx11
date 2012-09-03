@@ -28,18 +28,21 @@ void main(HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int nCmdShow)
   render.RegisterOutputClass(man);
   Scene* scene = new Scene(cam);
   Model* mesh = new Model(L"model.dfm");
-  mesh->SetVertexShader(0, vs);
-  mesh->SetPixelShader(0, ps);
   mesh->GetMeshByNum(0)->SetTexture(L"texture.bmp");
 
   DeferredPlane* pl = new DeferredPlane(L"Plane");
 
   SkyBox* sb = new SkyBox(L"skyBox", L"city.dds");
+  Group* group = new Group();
   sb->SetCamera(cam);
 
   scene->AddElement(sb);
-  scene->AddElement(mesh);
-  scene->AddElement(pl);
+  scene->AddElement(group);
+  scene->AddElement(pl, false);
+
+  mesh->SetShaders(0, vs, ps);
+  group->AddElement(mesh);
+
   render.SetScene(scene);
   render.Run();
 }
