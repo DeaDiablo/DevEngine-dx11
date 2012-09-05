@@ -1,15 +1,5 @@
-TextureCube skyboxTexture : register( t0 );
+TextureCube  skyboxTexture : register( t0 );
 SamplerState samplerLinear : register( s0 );
-
-cbuffer cb0: register (b0)
-{
-    matrix	viewproj;
-};
-
-cbuffer cb1: register (b1)
-{
-    matrix	world;
-};
 
 struct PS_INPUT
 {
