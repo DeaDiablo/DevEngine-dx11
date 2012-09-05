@@ -38,12 +38,10 @@ Camera::Camera(Vec3 position, Vec3 look, Vec3 up,
 
 Camera::~Camera()
 {
-  Buffer::ViewProjectionConstBuffer::Unregister();
 }
 
 void Camera::init()
 {
-  _vpBuffer = Buffer::ViewProjectionConstBuffer::Register();
 }
 
 void Camera::SetMove(const float& x, const float& y, const float& z)
@@ -162,7 +160,7 @@ void Camera::Update()
     _updateViewOrProjection = false;
     _view = Matrix::Look(_position(), _look(), _up());
     _view = _view * _projection;
-    _vpBuffer->UpdateResource(&_view);
+    VIEW_PROJECTION_BUFFER.UpdateResource(&_view);
   }
 }
 

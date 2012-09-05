@@ -239,8 +239,11 @@ ID3D11RenderTargetView* DirectX::CreateTextureRenderTarget(int targetNum, DXGI_F
   return rt->renderTargetView;
 }
 
-void DirectX::SetRenderTargets(int num, ID3D11RenderTargetView** rtv, ID3D11DepthStencilView* dsv)
+void DirectX::SetRenderTargets(int num, ID3D11RenderTargetView* const* rtv, ID3D11DepthStencilView* dsv)
 {
+  if (num >= D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT)
+    return;
+
   bool active = TRUE;
 
   if (_numRTV == num && _activeDepthStencilView == dsv)
@@ -564,6 +567,16 @@ void DirectX::RegistrationPixelShader(PixelShader* ps)
     ps->CompileShader();
   _pixelShaders[hash] = ps;
   return;
+}
+
+void DirectX::VSSetConstantBuffers(UINT startSlot, UINT num, ID3D11Buffer* const* buffer)
+{
+  _dxDeviceContext->VSSetConstantBuffers(startSlot, num, buffer);
+}
+
+void DirectX::PSSetConstantBuffers(UINT startSlot, UINT num, ID3D11Buffer* const* buffer)
+{
+  _dxDeviceContext->VSSetConstantBuffers(startSlot, num, buffer);
 }
 
 void DirectX::destroyShaderManager()

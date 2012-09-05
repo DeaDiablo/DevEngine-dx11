@@ -1,6 +1,7 @@
 #include <Core/DRender.h>
 
 #include <DX/DirectX.h>
+#include <DX/DConstBuffers.h>
 #include <Core/DLog.h>
 #include <process.h>
 
@@ -106,12 +107,14 @@ bool Render::InitRender(int width, int height, int RefreshHz, bool FullScreenMod
     }
   }
   
-  if (DX.InitDirectX(_hWnd, FullScreenMode, 1, width, height, RefreshHz))
+  if (DX.InitDirectX(_hWnd, FullScreenMode, 4, width, height, RefreshHz))
   {
     _input  = SYS_INPUT;
     _cs     = SYS_CS;
     SYS_TIMER.Reset(1);
     SYS_TIMER.Reset(2);
+    WORLD_BUFFER;
+    VIEW_PROJECTION_BUFFER;
     return TRUE;
   }
 

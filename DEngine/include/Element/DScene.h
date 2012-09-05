@@ -38,10 +38,6 @@ namespace dev
     VertexShader* _currentVS;
     PixelShader*  _currentPS;
 
-
-    Buffer::ConstantBuffer* _wBuffer;
-    Buffer::ConstantBuffer* _vpBuffer;
-
     struct DrawStruct
     {
       Elements::Set elements;

@@ -2,6 +2,7 @@
 #define DEV_CONST_BUFFERS_H
 
 #include <DX/DBuffer.h>
+#include <Math/DMatrix.h>
 
 namespace dev
 {
@@ -12,38 +13,15 @@ namespace dev
     class BufferSingleton
     {
     public:
-      inline static T* Register()
+      inline static T& Instance()
       {
-        if(!_element)
-          _element = new T(size);
-        _refCount++;
-        return _element;
+        static T element(size);
+        return element;
       }
-
-      inline static T* Get()
-      {
-        return _element;
-      }
-
-      inline static void Unregister()
-      { 
-        _refCount--;
-        if(_element && _refCount <= 0)
-        {
-          delete _element;
-          _element = 0;
-        }
-      }
-    private:
-      static T* _element;
-      static int _refCount;
     };
 
-    template<class B, class T, UINT size>
-    T* BufferSingleton<B, T, size>::_element = 0;
-
-    template<class B, class T, UINT size>
-    int BufferSingleton<B, T, size>::_refCount = 0;
+    #define WORLD_BUFFER            Buffer::WorldConstBuffer::Instance()
+    #define VIEW_PROJECTION_BUFFER  Buffer::ViewProjectionConstBuffer::Instance()
 
     //const buffers    
     class WorldConstBuffer : public BufferSingleton<WorldConstBuffer, ConstantBuffer, sizeof(Matrix)>

@@ -118,7 +118,6 @@ namespace dev
     void updateDirectionAndRight();
     Matrix _view, _projection;
     bool   _updateViewOrProjection;
-    Buffer::ConstantBuffer* _vpBuffer;
 
     Properties::Property<float>  _fovY, _aspect, _zn, _zf;
     Properties::Property<Vec3>   _position;

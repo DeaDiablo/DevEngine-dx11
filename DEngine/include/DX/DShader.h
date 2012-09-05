@@ -13,6 +13,10 @@ namespace dev
   class Shader
   {
   public:
+
+    #define MAX_SHADER_RESOURCES       D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT
+    #define MAX_SHADER_CONST_BUFFERS   D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT
+
     Shader(const wchar_t* path, DWORD type, const char* functionName);
     virtual ~Shader();
 
@@ -54,6 +58,11 @@ namespace dev
       return _isCompiled;
     }
 
+    virtual void SetConstantBuffer(UINT slot, Buffer::ConstantBuffer* constBuffer);
+    virtual void SetConstantBuffer(UINT slot, Buffer::ConstantBuffer& constBuffer);
+    virtual void ClearConstantBuffer(UINT slot);
+    virtual void ClearAllConstantBuffers();
+
   protected:
 
     inline void releaseBlob() 
@@ -69,12 +78,16 @@ namespace dev
     virtual bool supportTypeShader() = 0;
 
     bool compileShaderFromFile(const wchar_t* fileName, const char* functionName, const char* shaderModel);
+    virtual void updateNumConstBuffers();
 
     ID3DBlob*       _blob;
     std::wstring    _path;
     DWORD           _type;
     std::string     _function;
     bool            _isCompiled;
+    
+    UINT _startCBSlot, _numCBSlot;
+    ID3D11Buffer* _constBuffers[MAX_SHADER_CONST_BUFFERS];
   };
 
   class VertexShader : public Shader
@@ -125,7 +138,6 @@ namespace dev
   public:
 
     #define MAX_RENDER_TARGETS    D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT
-    #define MAX_SHADER_RESOURCES  D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT
 
     enum TypePixelShader
     {
@@ -146,17 +158,17 @@ namespace dev
     virtual bool CompileShader();
     virtual bool SetShader();
    
-    virtual void SetScreenRenderTarget(int targetSlot);
-    virtual void SetResourceRenderTarget(int targetSlot, int numTargetInDX, DXGI_FORMAT format);
-    virtual void ClearRenderTarget(int targetSlot);
+    virtual void SetScreenRenderTarget(UINT targetSlot);
+    virtual void SetResourceRenderTarget(UINT targetSlot, UINT numTargetInDX, DXGI_FORMAT format);
+    virtual void ClearRenderTarget(UINT targetSlot);
     virtual void ClearAllRenderTargets();
     
     virtual void SetScreenDepthStencil();
-    virtual void SetDepthStencilTarget(int num);
+    virtual void SetDepthStencilTarget(UINT num);
     virtual void ClearDepthStencilTarget();
 
-    virtual void UseResourceRenderTarget(int resourceSlot, int numTargetInDX);
-    virtual void ClearResourceRenderTarget(int resourceSlot);
+    virtual void UseResourceRenderTarget(UINT resourceSlot, UINT numTargetInDX);
+    virtual void ClearResourceRenderTarget(UINT resourceSlot);
     virtual void ClearResourcesRenderTarget();
 
     virtual PixelShader* AsPixelShader() 
@@ -173,9 +185,9 @@ namespace dev
     ID3D11PixelShader* _shader;
     ID3D11DepthStencilView* _depthStencilView;
     ID3D11RenderTargetView* _renderTargets[MAX_RENDER_TARGETS];
-    int _numRTSlot;
+    UINT _numRTSlot;
     ID3D11ShaderResourceView* _shaderResources[MAX_SHADER_RESOURCES];
-    int _startSRSlot, _numSRSlot;
+    UINT _startSRSlot, _numSRSlot;
   };
 
   struct ShaderStruct

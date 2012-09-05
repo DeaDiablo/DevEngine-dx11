@@ -2,6 +2,7 @@
 
 #include <Core/DLog.h>
 #include <DX/DirectX.h>
+#include <DX/DConstBuffers.h>
 
 using namespace dev;
 
@@ -12,6 +13,7 @@ Shader::Shader(const wchar_t* path, DWORD type, const char* functionName) :
   _function(functionName),
   _isCompiled(FALSE)
 {
+  ClearAllConstantBuffers();
 }
 
 Shader::~Shader()
@@ -19,6 +21,40 @@ Shader::~Shader()
   releaseBlob();
 }
 
+void Shader::SetConstantBuffer(UINT slot, Buffer::ConstantBuffer* constBuffer)
+{
+  if (slot >= MAX_SHADER_CONST_BUFFERS)
+    return;
+  
+  _constBuffers[slot] = constBuffer->GetBuffer();
+  updateNumConstBuffers();
+}
+
+void Shader::SetConstantBuffer(UINT slot, Buffer::ConstantBuffer& constBuffer)
+{
+  if (slot >= MAX_SHADER_CONST_BUFFERS)
+    return;
+
+  _constBuffers[slot] = constBuffer.GetBuffer();
+  updateNumConstBuffers();
+}
+
+void Shader::ClearConstantBuffer(UINT slot)
+{
+  if (slot >= MAX_SHADER_CONST_BUFFERS || !_constBuffers[slot])
+    return;
+
+  _constBuffers[slot] = NULL;
+  updateNumConstBuffers();
+}
+
+void Shader::ClearAllConstantBuffers()
+{
+  _startCBSlot = 0;
+  _numCBSlot = 0;
+  for (UINT i = 0; i < MAX_SHADER_CONST_BUFFERS; i++)
+    _constBuffers[i] = NULL;
+}
 bool Shader::compileShaderFromFile(const wchar_t* fileName, const char* functionName, const char* shaderModel)
 {
   if (!supportTypeShader())
@@ -60,6 +96,27 @@ bool Shader::compileShaderFromFile(const wchar_t* fileName, const char* function
   return TRUE;
 }
 
+void Shader::updateNumConstBuffers()
+{
+  for (UINT i = 0; i < MAX_SHADER_CONST_BUFFERS; i++)
+  {
+    if (_constBuffers[i] != NULL)
+    {
+      _startCBSlot = i;
+      break;
+    }
+  }
+
+  for(UINT i = MAX_SHADER_CONST_BUFFERS - 1; i >= _startCBSlot; i--)
+  {
+    if (_constBuffers[i] != NULL)
+    {
+      _numCBSlot = i - _startCBSlot + 1;
+      break;
+    }
+  }
+}
+
 //vertex shader
 VertexShader::VertexShader(const wchar_t* path, TypeVertexShader type, const char* nameFunction) :
   Shader(path, (DWORD)type, nameFunction),
@@ -67,6 +124,8 @@ VertexShader::VertexShader(const wchar_t* path, TypeVertexShader type, const cha
   _layout(NULL),
   _bufferType(Buffer::BT_NONE)
 {
+  SetConstantBuffer(0, VIEW_PROJECTION_BUFFER);
+  SetConstantBuffer(1, WORLD_BUFFER);
 }
 
 VertexShader::~VertexShader()
@@ -138,6 +197,9 @@ bool VertexShader::SetShader()
 {
   if (!_shader || !_layout)
     return FALSE;
+
+  if (_numCBSlot > 0)
+    DX_CONTEXT.VSSetConstantBuffers(_startCBSlot, _numCBSlot, _constBuffers);
   
   DX_CONTEXT.VSSetShader(_shader, NULL, 0);
   DX_CONTEXT.IASetInputLayout(_layout);
@@ -254,6 +316,8 @@ bool PixelShader::SetShader()
   if (!_shader)
     return FALSE;
 
+  if (_numCBSlot > 0)
+    DX_CONTEXT.PSSetConstantBuffers(_startCBSlot, _numCBSlot, _constBuffers);
   if (_numRTSlot > 0)
     DX.SetRenderTargets(_numRTSlot, _renderTargets, _depthStencilView);
   if (_numSRSlot > 0)
@@ -282,7 +346,7 @@ bool PixelShader::CompileShader()
   return TRUE;
 }
 
-void PixelShader::SetScreenRenderTarget(int targetSlot)
+void PixelShader::SetScreenRenderTarget(UINT targetSlot)
 {
   if (targetSlot < 0 || targetSlot >= MAX_RENDER_TARGETS)
     return;
@@ -291,7 +355,7 @@ void PixelShader::SetScreenRenderTarget(int targetSlot)
   updateNumRenderTargets();
 }
 
-void PixelShader::SetResourceRenderTarget(int targetSlot, int numTargetInDX, DXGI_FORMAT format)
+void PixelShader::SetResourceRenderTarget(UINT targetSlot, UINT numTargetInDX, DXGI_FORMAT format)
 {
   if (targetSlot < 0 || targetSlot >= MAX_RENDER_TARGETS)
     return;
@@ -300,7 +364,7 @@ void PixelShader::SetResourceRenderTarget(int targetSlot, int numTargetInDX, DXG
   updateNumRenderTargets();
 }
 
-void PixelShader::ClearRenderTarget(int targetSlot)
+void PixelShader::ClearRenderTarget(UINT targetSlot)
 {
   if (targetSlot < 0 || targetSlot >= MAX_RENDER_TARGETS)
     return;
@@ -314,7 +378,7 @@ void PixelShader::ClearRenderTarget(int targetSlot)
 
 void PixelShader::ClearAllRenderTargets()
 {
-  for (int i = 0; i < MAX_RENDER_TARGETS; i++)
+  for (UINT i = 0; i < MAX_RENDER_TARGETS; i++)
     _renderTargets[i] = NULL;
   _numRTSlot = 0;
 }
@@ -324,7 +388,7 @@ void PixelShader::SetScreenDepthStencil()
   _depthStencilView = DX.CreateScreenDepthStencilView();
 }
 
-void PixelShader::SetDepthStencilTarget(int num)
+void PixelShader::SetDepthStencilTarget(UINT num)
 {
   _depthStencilView = DX.CreateDepthStencilView(num);
 }
@@ -336,7 +400,7 @@ void PixelShader::ClearDepthStencilTarget()
 
 void PixelShader::updateNumRenderTargets()
 {
-  for(int i = MAX_RENDER_TARGETS - 1; i >= 0; i--)
+  for(UINT i = MAX_RENDER_TARGETS - 1; i >= 0; i--)
   {
     if (_renderTargets[i] != NULL)
     {
@@ -346,7 +410,7 @@ void PixelShader::updateNumRenderTargets()
   }
 }
 
-void PixelShader::UseResourceRenderTarget(int resourceSlot, int numTargetInDX)
+void PixelShader::UseResourceRenderTarget(UINT resourceSlot, UINT numTargetInDX)
 {
   if (resourceSlot < 0 || resourceSlot >= MAX_RENDER_TARGETS)
     return;
@@ -355,7 +419,7 @@ void PixelShader::UseResourceRenderTarget(int resourceSlot, int numTargetInDX)
   updateNumShaderResources();
 }
 
-void PixelShader::ClearResourceRenderTarget(int resourceSlot)
+void PixelShader::ClearResourceRenderTarget(UINT resourceSlot)
 {
   if (resourceSlot < 0 || resourceSlot >= MAX_RENDER_TARGETS)
     return;
@@ -369,7 +433,7 @@ void PixelShader::ClearResourceRenderTarget(int resourceSlot)
 
 void PixelShader::ClearResourcesRenderTarget()
 {
-  for (int i = 0; i < MAX_SHADER_RESOURCES; i++)
+  for (UINT i = 0; i < MAX_SHADER_RESOURCES; i++)
     _shaderResources[i] = NULL;
 
   _startSRSlot = 0;
@@ -378,7 +442,7 @@ void PixelShader::ClearResourcesRenderTarget()
 
 void PixelShader::updateNumShaderResources()
 {
-  for (int i = 0; i < MAX_SHADER_RESOURCES; i++)
+  for (UINT i = 0; i < MAX_SHADER_RESOURCES; i++)
   {
     if (_shaderResources[i] != NULL)
     {
@@ -387,7 +451,7 @@ void PixelShader::updateNumShaderResources()
     }
   }
 
-  for(int i = MAX_SHADER_RESOURCES - 1; i >= _startSRSlot; i--)
+  for(UINT i = MAX_SHADER_RESOURCES - 1; i >= _startSRSlot; i--)
   {
     if (_shaderResources[i] != NULL)
     {

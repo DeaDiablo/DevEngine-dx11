@@ -60,7 +60,7 @@ namespace dev
   //**************RENDER TARGETS****************//
   //********************************************//
   public:
-    inline ID3D11RenderTargetView** GetActiveRenderTargetView()  
+    inline ID3D11RenderTargetView* const* GetActiveRenderTargetView()  
     {
       return _activeRenderTargetView; 
     }
@@ -81,7 +81,7 @@ namespace dev
 
     ID3D11RenderTargetView*   CreateScreenRenderTarget  ();
     ID3D11RenderTargetView*   CreateTextureRenderTarget (int targetNum, DXGI_FORMAT format, bool recreate = false);
-    void                      SetRenderTargets          (int num, ID3D11RenderTargetView** rtv, ID3D11DepthStencilView* dsv);
+    void                      SetRenderTargets          (int num, ID3D11RenderTargetView* const* rtv, ID3D11DepthStencilView* dsv);
 
   protected:
     struct RenderTarget
@@ -94,10 +94,10 @@ namespace dev
     
     void destroyRenderTargets();
 
-    RenderTargetMap           _renderTargets;
-    RenderTarget*             _screenRenderTarget;
-    ID3D11RenderTargetView**  _activeRenderTargetView;
-    int                       _numRTV;
+    RenderTargetMap                 _renderTargets;
+    RenderTarget*                   _screenRenderTarget;
+    ID3D11RenderTargetView* const*  _activeRenderTargetView;
+    int                             _numRTV;
   
 
   //********************************************//
@@ -177,6 +177,9 @@ namespace dev
     void          RegistrationVertexShader  (VertexShader* vs);
     PixelShader*  GetPixelShader            (const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName);
     void          RegistrationPixelShader   (PixelShader* ps);
+
+    void          VSSetConstantBuffers(UINT startSlot, UINT num, ID3D11Buffer* const* buffer);
+    void          PSSetConstantBuffers(UINT startSlot, UINT num, ID3D11Buffer* const* buffer);
   protected:
     typedef std::map<UINT, Shader*> ShaderMap;
     typedef std::map<Buffer::BufferType, Shader*> LayoutMap;

@@ -145,8 +145,7 @@ namespace dev
     Matrix              _matrix;
     Element*            _parent;
 
-    Buffer::BufferType      _type;
-    Buffer::ConstantBuffer* _wBuffer;
+    Buffer::BufferType  _type;
 
     virtual void setScene(Scene* scene);
 

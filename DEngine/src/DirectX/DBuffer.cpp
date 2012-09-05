@@ -196,13 +196,13 @@ void Buffer::SetBuffer(LPVOID src, UINT count, BufferType BT_Type)
     _data.pSysMem = src;
     if (FAILED(DX_DEVICE.CreateBuffer(&_bufferDesc, &_data, &_buffer)))
     {
-      WRITE_LOG(L"Buffer not created (DVertex.cpp)");
+      WRITE_LOG(L"Buffer not created");
     }
   }
   else
     if (FAILED(DX_DEVICE.CreateBuffer(&_bufferDesc, NULL, &_buffer)))
     {
-      WRITE_LOG(L"Buffer not created (DVertex.cpp)");
+      WRITE_LOG(L"Buffer not created");
     }
 }
 
@@ -312,22 +312,6 @@ void ConstantBuffer::init()
 void ConstantBuffer::SetBuffer(LPVOID src, UINT size)
 {
   Buffer::SetBuffer(src, size, BT_NONE);
-}
-
-void ConstantBuffer::SetAsVSSource(UINT num)
-{
-  if (!_buffer || num >= D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT)
-    return;
-
-  DX_CONTEXT.VSSetConstantBuffers(num, 1, &_buffer);
-}
-
-void ConstantBuffer::SetAsPSSource(UINT num)
-{
-  if (!_buffer || num >= D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT)
-    return;
-
-  DX_CONTEXT.PSSetConstantBuffers(num, 1, &_buffer);
 }
 
 void ConstantBuffer::SetAsSource()

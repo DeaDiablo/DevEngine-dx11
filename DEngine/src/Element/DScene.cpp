@@ -13,21 +13,15 @@ Matrix Scene::_matrix = Matrix::identity();
 Scene::Scene() :
   _cameraActive(NULL)
 {
-  _wBuffer = Buffer::WorldConstBuffer::Register();
-  _vpBuffer = Buffer::ViewProjectionConstBuffer::Register();
 }
 
 Scene::Scene(Camera* camera) :
   _cameraActive(camera)
 {
-  _wBuffer = Buffer::WorldConstBuffer::Register();
-  _vpBuffer = Buffer::ViewProjectionConstBuffer::Register();
 }
 
 Scene::~Scene()
 {
-  Buffer::WorldConstBuffer::Unregister();
-  Buffer::ViewProjectionConstBuffer::Unregister();
 }
 
 void Scene::SetActiveCamera(Camera* camera)
@@ -89,19 +83,14 @@ void Scene::Draw(bool vSync)
     
     if(_currentVS != ds.vs)
     {
-      if (!ds.vs->SetShader())
-        continue;
-      _vpBuffer->SetAsVSSource(0);
-      _wBuffer->SetAsVSSource(1);
-
-      _currentVS = ds.vs;
+      if (ds.vs && ds.vs->SetShader())
+        _currentVS = ds.vs;
     }
 
     if(_currentPS != ds.ps)
     {
-      if (!ds.ps->SetShader())
-        continue;
-      _currentPS = ds.ps;
+      if (ds.ps && ds.ps->SetShader())
+        _currentPS = ds.ps;
     }
 
     for(Elements::Set::iterator i = ds.elements.begin(); i != ds.elements.end(); i++)

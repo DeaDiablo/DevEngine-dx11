@@ -112,10 +112,9 @@ namespace dev
       virtual ~ConstantBuffer();
 
       virtual void SetBuffer(LPVOID src, UINT size);
+      virtual inline ID3D11Buffer*& GetBuffer() { return _buffer; }
 
       virtual void SetAsSource();
-      virtual void SetAsVSSource(UINT num);
-      virtual void SetAsPSSource(UINT num);
       virtual void UpdateResource(LPVOID src);
 
     protected:

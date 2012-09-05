@@ -15,12 +15,10 @@ Element::Element(const Vec3& position, const Vec3& rotation, const Vec3& scale) 
   SetPosition(position);
   SetRotation(rotation);
   SetScale(scale);
-  _wBuffer = Buffer::WorldConstBuffer::Register();
 }
 
 Element::~Element()
 {
-  Buffer::WorldConstBuffer::Unregister();
 }
 
 void Element::SetVisible(bool value)
@@ -204,7 +202,7 @@ void Element::draw()
 
 void Element::updateParameters()
 {
-  _wBuffer->UpdateResource(&_matrix);
+  WORLD_BUFFER.UpdateResource(&_matrix);
 }
 
 void Element::returnParameters()
