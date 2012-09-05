@@ -26,8 +26,6 @@ namespace dev
     virtual void Draw(bool vSync);
 
   protected:
-    void addElement(Element* element);
-    void removeElement(Element* element);
     void addElementShaderPass(Element* element, const UINT& numPass, const ShaderStruct& shaderStruct);
     void removeElementShaderPass(Element* element, const UINT& numPass, const ShaderStruct& shaderStruct);
     Camera* _cameraActive;

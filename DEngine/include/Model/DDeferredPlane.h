@@ -10,6 +10,8 @@ namespace dev
   public:
     DeferredPlane(const wchar_t* name);
     virtual ~DeferredPlane();
+  protected:
+    virtual void updateParameters() {};
   };
 }
 

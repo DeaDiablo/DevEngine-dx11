@@ -224,4 +224,9 @@ void Element::setScene(Scene* scene)
     for (ShaderPassMap::iterator i = _shaderPasses.begin(); i != _shaderPasses.end(); ++i)
       _scene->addElementShaderPass(this, (*i).first, (*i).second);
   }
+  else
+  {
+    for (ShaderPassMap::iterator i = _shaderPasses.begin(); i != _shaderPasses.end(); ++i)
+      _scene->removeElementShaderPass(this, (*i).first, (*i).second);
+  }
 }

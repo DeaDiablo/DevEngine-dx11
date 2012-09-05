@@ -40,7 +40,6 @@ void Scene::AddElement(Element* element, bool update)
   _listElements.insert(element);
   if (update)
     _listUpdate.insert(element);
-  addElement(element);
 }
 
 
@@ -60,7 +59,6 @@ void Scene::RemoveElement(Element* element)
   element->setScene(NULL);
   _listElements.erase(element);
   _listUpdate.erase(element);
-  removeElement(element);
 }
 
 void Scene::Update()
@@ -98,32 +96,6 @@ void Scene::Draw(bool vSync)
   }
 
   DX.Present(vSync);
-}
-
-void Scene::addElement(Element* element)
-{
-  if (!element)
-    return;
-
-  ShaderPassMap& shaderPasses = element->GetShaderPasses();
-  if (shaderPasses.empty())
-    return;
-
-  for (ShaderPassMap::iterator i = shaderPasses.begin(); i != shaderPasses.end(); ++i)
-    addElementShaderPass(element, (*i).first, (*i).second);
-}
-
-void Scene::removeElement(Element* element)
-{
-  if (!element)
-    return;
-
-  ShaderPassMap& shaderPasses = element->GetShaderPasses();
-  if (shaderPasses.empty())
-    return;
-
-  for (ShaderPassMap::iterator i = shaderPasses.begin(); i != shaderPasses.end(); ++i)
-    removeElementShaderPass(element, (*i).first, (*i).second);
 }
 
 void Scene::addElementShaderPass(Element* element, const UINT& numPass, const ShaderStruct& shaderStruct)
