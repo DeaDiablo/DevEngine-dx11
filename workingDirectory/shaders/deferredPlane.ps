@@ -11,15 +11,15 @@ struct PS_INPUT
 float4 ps_main( PS_INPUT input ) : SV_Target
 {
 	float3 n = textureNorm.Sample(linearSample, input.Tex).xyz;
-	float z  = textureNorm.Sample(linearSample, input.Tex).w;
+	float y  = textureNorm.Sample(linearSample, input.Tex).w;
     float3 d  = textureDiff.Sample(linearSample, input.Tex).xyz;
 
-    float3  pp = input.Pos * z / input.Pos.z;
-    float3  l  = normalize ( float3(0.0f, -10.0f, 0.0f) - pp );
+    float3  pp = input.Pos * -y / input.Pos.y;
+    float3  l  = normalize ( float3(0.0f, 25.0f, 0.0f) - pp );
     float3  v  = normalize ( -pp );
     float3  h  = normalize ( l + v );
-    float diff = max     ( 0.2, dot ( l, n ) );
-    float spec = pow     ( max ( 0.0, dot ( h, n ) ), 40.0 );
+    float	diff = max     ( 0.2, dot ( l, n ) );
+    float	spec = pow     ( max ( 0.0, dot ( h, n ) ), 40.0 );
 
-    return float4 ( diff * d, 1.0f);
+    return float4 ( diff * d + float3(spec, spec, spec), 1.0f);
 }
