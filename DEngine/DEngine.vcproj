@@ -551,11 +551,11 @@
 					Name="shaders"
 					>
 					<File
-						RelativePath="..\workingDirectory\shaders\deferredPlain.ps"
+						RelativePath="..\workingDirectory\shaders\deferredPlane.ps"
 						>
 					</File>
 					<File
-						RelativePath="..\workingDirectory\shaders\deferredPlain.vs"
+						RelativePath="..\workingDirectory\shaders\deferredPlane.vs"
 						>
 					</File>
 				</Filter>

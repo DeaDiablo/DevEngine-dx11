@@ -19,7 +19,7 @@ void main(HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int nCmdShow)
   VertexShader* vs = new VertexShader(L"Tutorial03.fx");
   PixelShader* ps = new PixelShader(L"Tutorial03.fx");
   ps->SetResourceRenderTarget(0, 0, DXGI_FORMAT_R8G8B8A8_UNORM);
-  ps->SetResourceRenderTarget(1, 1, DXGI_FORMAT_R8G8B8A8_UNORM);
+  ps->SetResourceRenderTarget(1, 1, DXGI_FORMAT_R16G16B16A16_UNORM);
 
   ManipulatorWASD* man = new ManipulatorWASD(L"mans");
   man->SetSpeed(man->GetSpeed()*10);
