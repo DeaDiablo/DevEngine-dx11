@@ -22,6 +22,14 @@ namespace dev
                    +(m[(row)][2] * (mat2).m[2][(column)]) \
                    +(m[(row)][3] * (mat2).m[3][(column)])
 
+
+  #define THIS_RESULT_MM(mat2, row, column) \
+                    m[(row)][(column)] = \
+                    (m[(row)][0] * (mat2).m[0][(column)]) \
+                    +(m[(row)][1] * (mat2).m[1][(column)]) \
+                    +(m[(row)][2] * (mat2).m[2][(column)]) \
+                    +(m[(row)][3] * (mat2).m[3][(column)])
+
   #define RESULT_MV4(vec1, vec2, row) \
                     (vec1).v[(row)] = \
                      (m[(row)][0] * (vec).v[0]) \
@@ -593,31 +601,29 @@ namespace dev
       return r;
     }
 
-    inline const Matrix operator *= (const Matrix& matrix)
+    inline Matrix& operator *= (const Matrix& matrix)
     {
-      Matrix r;
+      THIS_RESULT_MM(matrix, 0, 0);
+      THIS_RESULT_MM(matrix, 0, 1);
+      THIS_RESULT_MM(matrix, 0, 2);
+      THIS_RESULT_MM(matrix, 0, 3);
 
-      RESULT_MM(r, matrix, 0, 0);
-      RESULT_MM(r, matrix, 0, 1);
-      RESULT_MM(r, matrix, 0, 2);
-      RESULT_MM(r, matrix, 0, 3);
+      THIS_RESULT_MM(matrix, 1, 0);
+      THIS_RESULT_MM(matrix, 1, 1);
+      THIS_RESULT_MM(matrix, 1, 2);
+      THIS_RESULT_MM(matrix, 1, 3);
 
-      RESULT_MM(r, matrix, 1, 0);
-      RESULT_MM(r, matrix, 1, 1);
-      RESULT_MM(r, matrix, 1, 2);
-      RESULT_MM(r, matrix, 1, 3);
+      THIS_RESULT_MM(matrix, 2, 0);
+      THIS_RESULT_MM(matrix, 2, 1);
+      THIS_RESULT_MM(matrix, 2, 2);
+      THIS_RESULT_MM(matrix, 2, 3);
 
-      RESULT_MM(r, matrix, 2, 0);
-      RESULT_MM(r, matrix, 2, 1);
-      RESULT_MM(r, matrix, 2, 2);
-      RESULT_MM(r, matrix, 2, 3);
+      THIS_RESULT_MM(matrix, 3, 0);
+      THIS_RESULT_MM(matrix, 3, 1);
+      THIS_RESULT_MM(matrix, 3, 2);
+      THIS_RESULT_MM(matrix, 3, 3);
 
-      RESULT_MM(r, matrix, 3, 0);
-      RESULT_MM(r, matrix, 3, 1);
-      RESULT_MM(r, matrix, 3, 2);
-      RESULT_MM(r, matrix, 3, 3);
-      
-      return r;
+      return *this;
     }
 
     inline const Matrix operator / (const float& scalar) const
