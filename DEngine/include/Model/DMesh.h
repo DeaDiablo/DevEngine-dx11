@@ -17,6 +17,7 @@ namespace dev
 
     void SetVertices(LPVOID vertices, int numberVertex, Buffer::BufferType BT_Type);
     void SetIndexes(LPVOID indexes, int numberIndexes, Buffer::BufferType BT_Type);
+    void SetVerticesOrIndexes(LPVOID vertices, int numberVertex, Buffer::BufferType BT_Type);
     
     virtual inline Mesh* AsMesh() 
     {

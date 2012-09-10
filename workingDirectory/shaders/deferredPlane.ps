@@ -2,6 +2,11 @@ Texture2D		textureDiff	 : register( t0 );
 Texture2D		textureNorm	 : register( t1 );
 SamplerState    linearSample : register( s0 );
 
+cbuffer cb0: register (b0)
+{
+    float4 eyePos;
+};
+
 struct PS_INPUT
 {
     float4 Pos : SV_POSITION;
@@ -10,16 +15,16 @@ struct PS_INPUT
 
 float4 ps_main( PS_INPUT input ) : SV_Target
 {
-	float3 n = textureNorm.Sample(linearSample, input.Tex).xyz;
+	float3 n = normalize(textureNorm.Sample(linearSample, input.Tex).xyz);
 	float y  = textureNorm.Sample(linearSample, input.Tex).w;
-    float3 d  = textureDiff.Sample(linearSample, input.Tex).xyz;
+    float3 d = textureDiff.Sample(linearSample, input.Tex).xyz;
 
     float3  pp = input.Pos * -y / input.Pos.y;
     float3  l  = normalize ( float3(0.0f, 25.0f, 0.0f) - pp );
-    float3  v  = normalize ( -pp );
+    float3  v  = normalize ( eyePos.xyz - pp );
     float3  h  = normalize ( l + v );
     float	diff = max     ( 0.2, dot ( l, n ) );
-    float	spec = pow     ( max ( 0.0, dot ( h, n ) ), 40.0 );
+    float	spec = pow     ( max ( 0.0, dot ( h, n ) ), 80.0 );
 
-    return float4 ( diff * d + float3(spec, spec, spec), 1.0f);
+    return float4 ( diff * d , 1.0f);
 }

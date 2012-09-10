@@ -605,6 +605,22 @@
 				</File>
 			</Filter>
 		</Filter>
+		<Filter
+			Name="Utils"
+			>
+			<File
+				RelativePath=".\src\Utils\DFile.cpp"
+				>
+			</File>
+			<Filter
+				Name="include"
+				>
+				<File
+					RelativePath=".\include\Utils\DFile.h"
+					>
+				</File>
+			</Filter>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

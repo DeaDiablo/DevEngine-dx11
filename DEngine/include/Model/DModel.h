@@ -15,9 +15,15 @@ namespace dev
   public:
     enum FileID
     {
-      VertexFile = 0xF1A2B400,
-      Index32File = 0xE1A2B400,
-      Index16File = 0xD1A2B400
+      MaxFile = 0xF1A2B400,
+      ModelFile = 0xF1A2B401
+    };
+
+    enum MeshID
+    {
+      VertexMesh =  0xE1A2B401,
+      Index32Mesh = 0xE1A2B402,
+      Index16Mesh = 0xE1A2B403
     };
 
     Model(const wchar_t* path, const Vec3& position, const Vec3& rotation, const Vec3& scale);
@@ -63,7 +69,6 @@ namespace dev
     }
   
   protected:
-    bool readFile(HANDLE hFile, LPVOID buffer, DWORD size);
     std::wstring _path;
 
     DWORD _meshCount;

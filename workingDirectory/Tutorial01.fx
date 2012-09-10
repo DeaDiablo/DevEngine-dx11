@@ -1,5 +1,3 @@
-Texture2D texSa : register( t0 );
-SamplerState samplerLinear : register( s0 );
 
 cbuffer cb0: register (b0)
 {
@@ -9,6 +7,11 @@ cbuffer cb0: register (b0)
 cbuffer cb1: register (b1)
 {
     matrix	World;
+};
+
+cbuffer cb2: register (b2)
+{
+    float4	eyePos;
 };
 
 struct VS_INPUT
@@ -23,28 +26,18 @@ struct PS_INPUT
     float4 Pos : SV_POSITION;
 	float3 Normal: NORMAL0;
     float2 TexCoord : TEXCOORD0;
-    float3 Pos2: TEXCOORD1;
-};
-
-struct PS_OUT {
-    float4 diff : SV_TARGET0;
-    float4 norm : SV_TARGET1;
+   float3 v_Light : 		TEXCOORD2;
+   float3 v_View:   		TEXCOORD3;
 };
 
 PS_INPUT vs_main(VS_INPUT input)
 {
 	PS_INPUT output;
-	output.Pos2 = mul(World, input.Pos);
 	output.Pos = mul(mul(ViewProjection, World), input.Pos);
 	output.Normal = mul(World, input.Normal);
 	output.TexCoord = input.TexCoord;
-    return output;
-}
-
-PS_OUT ps_main(PS_INPUT input)
-{
-	PS_OUT output;
-	output.diff = texSa.Sample(samplerLinear, input.TexCoord.xy);
-	output.norm = float4(input.Normal.xyz, input.Pos2.y);
+    float3 p_Pos	= mul(input.Pos,World);
+    output.v_Light	= float3(0.0f,50.0f, 0.0f)-p_Pos;
+    output.v_View	= eyePos.xyz-p_Pos;
     return output;
 }

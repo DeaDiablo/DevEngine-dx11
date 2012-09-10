@@ -7,7 +7,12 @@
 
 namespace dev
 {
-  #define WRITE_LOG(text) Log::GetLog()->WriteToLog((text))
+  #define WRITE_LOG(text)             Log::GetLog()->WriteToLog((text))
+
+  #define WRITE_FILE_LOG(text, path) \
+          std::wstring buffer(text); \
+          buffer += path; \
+          WRITE_LOG(buffer.c_str()); \
 
   class Log
   {

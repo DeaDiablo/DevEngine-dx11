@@ -158,9 +158,12 @@ void Camera::Update()
   if (_updateViewOrProjection)
   {
     _updateViewOrProjection = false;
-    _view = Matrix::Look(_position(), _look(), _up());
+    Vec3 pos = _position();
+    _view = Matrix::Look(pos, _look(), _up());
     _view = _view * _projection;
     VIEW_PROJECTION_BUFFER.UpdateResource(&_view);
+    Vec4 eyePos(pos.x, pos.y, pos.z, 1.0f);
+    EYE_POSITION_BUFFER.UpdateResource(&eyePos);
   }
 }
 

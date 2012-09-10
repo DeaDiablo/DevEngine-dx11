@@ -217,16 +217,17 @@ void Element::updateParent(Message msg)
 
 void Element::setScene(Scene* scene)
 {
-  _scene = scene;
-
-  if (_scene)
+  if (scene)
   {
     for (ShaderPassMap::iterator i = _shaderPasses.begin(); i != _shaderPasses.end(); ++i)
-      _scene->addElementShaderPass(this, (*i).first, (*i).second);
+      scene->addElementShaderPass(this, (*i).first, (*i).second);
   }
-  else
+  
+  if (_scene)
   {
     for (ShaderPassMap::iterator i = _shaderPasses.begin(); i != _shaderPasses.end(); ++i)
       _scene->removeElementShaderPass(this, (*i).first, (*i).second);
   }
+
+  _scene = scene;
 }
