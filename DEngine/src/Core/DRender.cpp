@@ -115,6 +115,7 @@ bool Render::InitRender(int width, int height, int RefreshHz, bool FullScreenMod
     SYS_TIMER.Reset(2);
     WORLD_BUFFER;
     VIEW_PROJECTION_BUFFER;
+    INV_VIEW_PROJECTION_BUFFER;
     EYE_POSITION_BUFFER;
     return TRUE;
   }

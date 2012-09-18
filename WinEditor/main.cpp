@@ -16,18 +16,12 @@ void main(HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int nCmdShow)
     MessageBox(0, "Render not init", "Error:", MB_ICONERROR);
     return;
   }
-/*
+
 
   VertexShader* vs = new VertexShader(L"Tutorial03.fx");
   PixelShader* ps = new PixelShader(L"Tutorial03.fx");
   ps->SetResourceRenderTarget(0, 0, DXGI_FORMAT_R8G8B8A8_UNORM);
-  ps->SetResourceRenderTarget(1, 1, DXGI_FORMAT_R16G16B16A16_SNORM);
-  ps->SetResourceRenderTarget(2, 2, DXGI_FORMAT_R32G32B32A32_FLOAT);*/
-
-
-  VertexShader* vs = new VertexShader(L"Tutorial01.fx");
-  vs->SetConstantBuffer(2, EYE_POSITION_BUFFER);
-  PixelShader* ps = new PixelShader(L"Tutorial011.fx");
+  ps->SetResourceRenderTarget(1, 1, DXGI_FORMAT_R16G16B16A16_UNORM);
 
   ManipulatorWASD* man = new ManipulatorWASD(L"mans");
   man->SetSpeed(man->GetSpeed()*10);
@@ -38,7 +32,7 @@ void main(HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int nCmdShow)
   Model* mesh = new Model(L"model.dfm");
   mesh->GetMeshByNum(0)->SetTexture(L"texture.bmp");
 
-  //DeferredPlane* pl = new DeferredPlane(L"Plane");
+  DeferredPlane* pl = new DeferredPlane(L"Plane");
 
   SkyBox* sb = new SkyBox(L"skyBox", L"city.dds");
   Group* group = new Group();
@@ -46,7 +40,7 @@ void main(HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int nCmdShow)
   scene->AddElement(sb);
   scene->AddElement(group);
 
-  //scene->AddElement(pl, false);
+  scene->AddElement(pl, false);
 
   mesh->SetShaders(0, vs, ps);
   group->AddElement(mesh);

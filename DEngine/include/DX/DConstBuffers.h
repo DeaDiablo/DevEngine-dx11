@@ -20,15 +20,19 @@ namespace dev
       }
     };
 
-    #define WORLD_BUFFER            Buffer::WorldConstBuffer::Instance()
-    #define VIEW_PROJECTION_BUFFER  Buffer::ViewProjectionConstBuffer::Instance()
-    #define EYE_POSITION_BUFFER     Buffer::EyePositionConstBuffer::Instance()
+    #define WORLD_BUFFER                Buffer::WorldConstBuffer::Instance()
+    #define VIEW_PROJECTION_BUFFER      Buffer::ViewProjectionConstBuffer::Instance()
+    #define INV_VIEW_PROJECTION_BUFFER  Buffer::InverseViewProjectionConstBuffer::Instance()
+    #define EYE_POSITION_BUFFER         Buffer::EyePositionConstBuffer::Instance()
 
     //const buffers    
     class WorldConstBuffer : public BufferSingleton<WorldConstBuffer, ConstantBuffer, sizeof(Matrix)>
     {};
 
     class ViewProjectionConstBuffer : public BufferSingleton<ViewProjectionConstBuffer, ConstantBuffer, sizeof(Matrix)>
+    {};
+
+    class InverseViewProjectionConstBuffer : public BufferSingleton<InverseViewProjectionConstBuffer, ConstantBuffer, sizeof(Matrix)>
     {};
 
     class EyePositionConstBuffer : public BufferSingleton<EyePositionConstBuffer, ConstantBuffer, sizeof(Vec4)>

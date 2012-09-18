@@ -161,6 +161,7 @@ void Camera::Update()
     Vec3 pos = _position();
     _view = Matrix::Look(pos, _look(), _up());
     _view = _view * _projection;
+    INV_VIEW_PROJECTION_BUFFER.UpdateResource(&Matrix::Inverse(_view));
     VIEW_PROJECTION_BUFFER.UpdateResource(&_view);
     Vec4 eyePos(pos.x, pos.y, pos.z, 1.0f);
     EYE_POSITION_BUFFER.UpdateResource(&eyePos);

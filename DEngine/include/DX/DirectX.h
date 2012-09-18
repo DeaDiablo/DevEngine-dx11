@@ -113,6 +113,21 @@ namespace dev
       return _activeDepthStencilState; 
     }
 
+    inline ID3D11ShaderResourceView* GetShaderResourceScreenDepthStencilTarget()
+    {
+      if (_screenDepthStencilTarget)
+        return _screenDepthStencilTarget->shaderResource;
+      return NULL;
+    }
+
+    inline ID3D11ShaderResourceView* GetShaderResourceDepthStencilTarget(int num)
+    {
+      if (_depthStencilTargets.find(num) != _depthStencilTargets.end())
+        return _depthStencilTargets[num]->shaderResource;
+      return NULL;
+    }
+
+
     void                      SetDepthStencilState          (ID3D11DepthStencilState* dsState);
 
     ID3D11DepthStencilView*   CreateScreenDepthStencilView  ();
@@ -124,8 +139,9 @@ namespace dev
   protected:
     struct DepthStencilTarget
     {
-      ID3D11Texture2D*         depthStencilTexture;
-      ID3D11DepthStencilView*  depthStencilView;
+      ID3D11Texture2D*          depthStencilTexture;
+      ID3D11DepthStencilView*   depthStencilView;
+      ID3D11ShaderResourceView* shaderResource;
     };
     typedef std::map<int, DepthStencilTarget*> DepthStencilTargetMap;
     typedef std::set<ID3D11DepthStencilState*> DSStateSet;

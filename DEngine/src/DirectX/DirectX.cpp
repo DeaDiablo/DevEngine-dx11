@@ -368,11 +368,11 @@ DirectX::DepthStencilTarget* DirectX::newDepthStencilTarget()
   descDepth.Height = _height;
   descDepth.MipLevels = 1;
   descDepth.ArraySize = 1;
-  descDepth.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+  descDepth.Format = DXGI_FORMAT_R32_TYPELESS;
   descDepth.SampleDesc.Count = _msMode;
   descDepth.SampleDesc.Quality = 0;
   descDepth.Usage = D3D11_USAGE_DEFAULT;
-  descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+  descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
   descDepth.CPUAccessFlags = 0;
   descDepth.MiscFlags = 0;
   if (FAILED(_dxDevice->CreateTexture2D(&descDepth, NULL, &dst->depthStencilTexture)))
@@ -386,7 +386,7 @@ DirectX::DepthStencilTarget* DirectX::newDepthStencilTarget()
   // Create the depth stencil view
   D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
   ZeroMemory( &descDSV, sizeof(descDSV) );
-  descDSV.Format = descDepth.Format;
+  descDSV.Format = DXGI_FORMAT_D32_FLOAT;
   if(_msMode > 1)
     descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
   else
@@ -397,6 +397,23 @@ DirectX::DepthStencilTarget* DirectX::newDepthStencilTarget()
     WRITE_LOG(L"DepthStencilView not init");
     return NULL;
   }
+
+  // create shader resource view
+  D3D11_SHADER_RESOURCE_VIEW_DESC resourceViewDesc;
+  ZeroMemory(&resourceViewDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+  resourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
+  if (_msMode > 1)
+    resourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMS;
+  else
+    resourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+  resourceViewDesc.Texture2D.MipLevels = 1;
+
+  if(FAILED(_dxDevice->CreateShaderResourceView(dst->depthStencilTexture, &resourceViewDesc, &dst->shaderResource)))
+  {
+    WRITE_LOG(L"Failed init ShaderResource for DepthStencilView");
+    return NULL;
+  }
+
   return dst;
 }
 

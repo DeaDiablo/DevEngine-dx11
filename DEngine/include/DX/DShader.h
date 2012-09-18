@@ -168,8 +168,10 @@ namespace dev
     virtual void ClearDepthStencilTarget();
 
     virtual void UseResourceRenderTarget(UINT resourceSlot, UINT numTargetInDX);
-    virtual void ClearResourceRenderTarget(UINT resourceSlot);
-    virtual void ClearResourcesRenderTarget();
+    virtual void UseResourceScreenDepthStencilTarget(UINT resourceSlot);
+    virtual void UseResourceDepthStencilTarget(UINT resourceSlot, UINT numTargetInDX);
+    virtual void ClearShaderResource(UINT resourceSlot);
+    virtual void ClearShaderResources();
 
     virtual PixelShader* AsPixelShader() 
     { 

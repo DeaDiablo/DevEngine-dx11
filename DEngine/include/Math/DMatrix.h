@@ -172,6 +172,8 @@ namespace dev
       ROW(1, d10, d11, d12, d13);
       ROW(2, d20, d21, d22, d23);
       ROW(3, d30, d31, d32, d33);
+
+      return *this;
     }
 
     inline static Matrix Inverse(Matrix matrix)

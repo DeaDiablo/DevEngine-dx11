@@ -1,8 +1,15 @@
-Texture2D		textureDiff	 : register( t0 );
-Texture2D		textureNorm	 : register( t1 );
+#define FLT_EPSILON	1.00001525f
+Texture2D       textureDiff  : register( t0 );
+Texture2D       textureNorm  : register( t1 );
+Texture2D       textureDepth : register( t2 );
 SamplerState    linearSample : register( s0 );
 
 cbuffer cb0: register (b0)
+{
+    matrix	inverseViewProjection;
+};
+
+cbuffer cb1: register (b1)
 {
     float4 eyePos;
 };
@@ -13,18 +20,43 @@ struct PS_INPUT
     float2 Tex : TEXCOORD0;
 };
 
+float3 getWorldPosition(float2 Tex, float Depth)
+{
+    float4 pos;
+
+    pos.xy   = Tex.xy*2.0f-1.0f;
+    pos.y    = -pos.y;
+    pos.z    = Depth;
+    pos      = mul(inverseViewProjection, float4(pos.xyz, 1.0f));
+    pos.xyz  /= pos.www;
+
+    return pos.xyz;
+}
+
+float3 getWorldNormal(float3 texXYZ)
+{
+    float3 normal = texXYZ;
+
+	normal.z = floor(normal.z * 2.0f * FLT_EPSILON);
+    normal = normal * 2.0f - 1.0f;
+    normal.z = normal.z * sqrt(abs(1.0f - dot(normal.xy,normal.xy)));
+
+    return normal;
+}
+
 float4 ps_main( PS_INPUT input ) : SV_Target
 {
-	float3 n = normalize(textureNorm.Sample(linearSample, input.Tex).xyz);
-	float y  = textureNorm.Sample(linearSample, input.Tex).w;
-    float3 d = textureDiff.Sample(linearSample, input.Tex).xyz;
+    float  depth = textureDepth.Sample(linearSample, input.Tex).r;
+    float3 color = textureDiff.Sample(linearSample, input.Tex).xyz;
+	float4 data  = textureNorm.Sample(linearSample, input.Tex).xyzw;
+    
+	float3 n = getWorldNormal(data.xyz);
+    float3 p = getWorldPosition(input.Tex, depth);
+    float3 l = normalize ( float3(0.0f, 50.0f, 0.0f) - p );
+    float3 v = normalize ( eyePos.xyz - p );
+    float3 h = normalize ( l + v );
+    float  diffuse  = max( 0.2, dot ( l, n ) );
+    float  specular = pow( max ( 0.0, dot ( h, n ) ), 80.0 );
 
-    float3  pp = input.Pos * -y / input.Pos.y;
-    float3  l  = normalize ( float3(0.0f, 25.0f, 0.0f) - pp );
-    float3  v  = normalize ( eyePos.xyz - pp );
-    float3  h  = normalize ( l + v );
-    float	diff = max     ( 0.2, dot ( l, n ) );
-    float	spec = pow     ( max ( 0.0, dot ( h, n ) ), 80.0 );
-
-    return float4 ( diff * d , 1.0f);
+    return float4 ( diffuse * color + specular , 1.0f);
 }

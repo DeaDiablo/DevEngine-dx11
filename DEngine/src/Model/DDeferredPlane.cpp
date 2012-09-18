@@ -19,8 +19,9 @@ DeferredPlane::DeferredPlane(const wchar_t* name) :
     ps->ClearDepthStencilTarget();
     ps->UseResourceRenderTarget(0, 0);
     ps->UseResourceRenderTarget(1, 1);
-    ps->UseResourceRenderTarget(2, 2);
-    ps->SetConstantBuffer(0, EYE_POSITION_BUFFER);
+    ps->UseResourceScreenDepthStencilTarget(2);
+    ps->SetConstantBuffer(0, INV_VIEW_PROJECTION_BUFFER);
+    ps->SetConstantBuffer(1, EYE_POSITION_BUFFER);
   }
 }
 

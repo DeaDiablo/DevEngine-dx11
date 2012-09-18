@@ -249,7 +249,7 @@ PixelShader::PixelShader(const wchar_t* path, TypePixelShader type, const char* 
   _shader(NULL)
 {
   ClearAllRenderTargets();
-  ClearResourcesRenderTarget();
+  ClearShaderResources();
   SetScreenDepthStencil();
   SetScreenRenderTarget(0);
 }
@@ -412,16 +412,34 @@ void PixelShader::updateNumRenderTargets()
 
 void PixelShader::UseResourceRenderTarget(UINT resourceSlot, UINT numTargetInDX)
 {
-  if (resourceSlot < 0 || resourceSlot >= MAX_RENDER_TARGETS)
+  if (resourceSlot < 0 || resourceSlot >= MAX_SHADER_RESOURCES)
     return;
 
   _shaderResources[resourceSlot] = DX.GetShaderResourceRenderTarget(numTargetInDX);
   updateNumShaderResources();
 }
 
-void PixelShader::ClearResourceRenderTarget(UINT resourceSlot)
+void PixelShader::UseResourceScreenDepthStencilTarget(UINT resourceSlot)
 {
-  if (resourceSlot < 0 || resourceSlot >= MAX_RENDER_TARGETS)
+  if (resourceSlot < 0 || resourceSlot >= MAX_SHADER_RESOURCES)
+    return;
+
+  _shaderResources[resourceSlot] = DX.GetShaderResourceScreenDepthStencilTarget();
+  updateNumShaderResources();
+}
+
+void PixelShader::UseResourceDepthStencilTarget(UINT resourceSlot, UINT numTargetInDX)
+{
+  if (resourceSlot < 0 || resourceSlot >= MAX_SHADER_RESOURCES)
+    return;
+
+  _shaderResources[resourceSlot] = DX.GetShaderResourceDepthStencilTarget(numTargetInDX);
+  updateNumShaderResources();
+}
+
+void PixelShader::ClearShaderResource(UINT resourceSlot)
+{
+  if (resourceSlot < 0 || resourceSlot >= MAX_SHADER_RESOURCES)
     return;
 
   if (!_shaderResources[resourceSlot])
@@ -431,7 +449,7 @@ void PixelShader::ClearResourceRenderTarget(UINT resourceSlot)
   updateNumShaderResources();
 }
 
-void PixelShader::ClearResourcesRenderTarget()
+void PixelShader::ClearShaderResources()
 {
   for (UINT i = 0; i < MAX_SHADER_RESOURCES; i++)
     _shaderResources[i] = NULL;
