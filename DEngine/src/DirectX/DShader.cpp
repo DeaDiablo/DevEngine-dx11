@@ -476,5 +476,7 @@ void PixelShader::updateNumShaderResources()
       _numSRSlot = i - _startSRSlot + 1;
       break;
     }
+    if (i == _startSRSlot)
+      break;
   }
 }

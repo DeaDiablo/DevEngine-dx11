@@ -10,13 +10,12 @@ using namespace dev;
 
 void main(HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int nCmdShow)
 {
-  Render render(800, 600);
-  if (!render.InitRender(800, 600, 60, false))
+  Render render(1920, 1080);
+  if (!render.InitRender(1920, 1080, 60, false))
   {
     MessageBox(0, "Render not init", "Error:", MB_ICONERROR);
     return;
   }
-
 
   VertexShader* vs = new VertexShader(L"Tutorial03.fx");
   PixelShader* ps = new PixelShader(L"Tutorial03.fx");
@@ -30,7 +29,8 @@ void main(HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int nCmdShow)
   render.RegisterOutputClass(man);
   Scene* scene = new Scene(cam);
   Model* mesh = new Model(L"model.dfm");
-  mesh->GetMeshByNum(0)->SetTexture(L"texture.bmp");
+  for(UINT i = 0; i < mesh->GetMeshCount(); i++)
+    mesh->GetMeshByNum(i)->SetTexture(L"texture.bmp");
 
   DeferredPlane* pl = new DeferredPlane(L"Plane");
 

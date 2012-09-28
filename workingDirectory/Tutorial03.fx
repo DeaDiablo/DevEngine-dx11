@@ -43,9 +43,7 @@ PS_OUT ps_main(PS_INPUT input)
 {
     PS_OUT output;
     output.diff = texSa.Sample(samplerLinear, input.TexCoord.xy);
-    float3 n = normalize(input.Normal);
-    output.norm.xyz = n.xyz * 0.5f + 0.5f;
-    output.norm.z  = /*matID / 65536 + */ max(0.0f, sign(n.z)) * 0.5f;
-    output.norm.w  = /*ambient and elum*/1.0f;
+    output.norm.xyz = normalize(input.Normal) * 0.5f + 0.5f;
+    output.norm.w  = /*ambient and matID*/1.0f;
     return output;
 }

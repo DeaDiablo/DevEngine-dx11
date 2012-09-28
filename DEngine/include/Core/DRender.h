@@ -11,7 +11,7 @@ namespace dev
   class Render
   {
   public:
-    Render(int width, int height);
+    Render(int widthWnd, int heightWnd);
     Render(HWND hWnd);
     Render(HINSTANCE hInstance, int PosX, int PosY, int Width, int Height);
     virtual ~Render();

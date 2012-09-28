@@ -38,3 +38,45 @@ void Light::SetRadius(const float& value)
 {
   _radius = value;
 }
+
+//spot light
+PointLight::PointLight(const Vec3& position, const Vec3& color, const float& radius) : 
+  Light(position, color, radius)
+{
+}
+
+PointLight::~PointLight()
+{
+}
+
+//direction light
+DirectionLight::DirectionLight(const Vec3& direction, const Vec3& position, const Vec3& color, const float& radius) : 
+  Light(position, color, radius)
+{
+  SetDirection(direction);
+}
+
+DirectionLight::~DirectionLight()
+{
+}
+
+void DirectionLight::SetDirection(const Vec3& value)
+{
+  _direction = value;
+}
+
+//conus light
+SpotLight::SpotLight(const float& angle, const Vec3& direction, const Vec3& position, const Vec3& color, const float& radius) : 
+  DirectionLight(direction, position, color, radius)
+{
+  SetAngle(angle);
+}
+
+SpotLight::~SpotLight()
+{
+}
+
+void SpotLight::SetAngle(const float& value)
+{
+  _angle = value;
+}

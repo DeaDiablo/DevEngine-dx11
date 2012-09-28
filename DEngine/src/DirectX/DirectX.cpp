@@ -58,9 +58,10 @@ bool DirectX::InitDirectX(HWND hWnd, bool fullScreenMode, UINT msMode, UINT widt
   CreateViewPort((float)width, (float)height);
 
   _dxDeviceContext->OMSetRenderTargets(1, &_screenRenderTarget->renderTargetView, _screenDepthStencilTarget->depthStencilView);
-  //_dxDeviceContext->RSSetState(_activeRasterState);
   _dxDeviceContext->RSSetViewports(1, &_viewPort);
   _dxDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  //SetDepthStencilState(CreateDepthStencilState(TRUE, D3D11_DEPTH_WRITE_MASK_ALL, D3D11_COMPARISON_LESS));
+  //SetRasterizerState(CreateRasterizerState());
 
   _initialized = TRUE;
 
@@ -643,9 +644,9 @@ ID3D11SamplerState* DirectX::GetSamplerState()
   D3D11_SAMPLER_DESC sampDesc;
   ZeroMemory( &sampDesc, sizeof(sampDesc) );
   sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-  sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-  sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-  sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+  sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
   sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
   sampDesc.MinLOD = 0;
   sampDesc.MaxLOD = D3D11_FLOAT32_MAX;

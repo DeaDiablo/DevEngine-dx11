@@ -1,4 +1,4 @@
-#define FLT_EPSILON	1.00001525f
+#define FLT_EPSILON	1.00001521f
 Texture2D       textureDiff  : register( t0 );
 Texture2D       textureNorm  : register( t1 );
 Texture2D       textureDepth : register( t2 );
@@ -24,24 +24,12 @@ float3 getWorldPosition(float2 Tex, float Depth)
 {
     float4 pos;
 
-    pos.xy   = Tex.xy*2.0f-1.0f;
-    pos.y    = -pos.y;
-    pos.z    = Depth;
-    pos      = mul(inverseViewProjection, float4(pos.xyz, 1.0f));
+    pos.xy   = Tex.xy * 2.0f - 1.0f;
+    pos.xyzw = float4(pos.x, -pos.y, Depth, 1.0f);
+    pos      = mul(inverseViewProjection, pos);
     pos.xyz  /= pos.www;
 
     return pos.xyz;
-}
-
-float3 getWorldNormal(float3 texXYZ)
-{
-    float3 normal = texXYZ;
-
-	normal.z = floor(normal.z * 2.0f * FLT_EPSILON);
-    normal = normal * 2.0f - 1.0f;
-    normal.z = normal.z * sqrt(abs(1.0f - dot(normal.xy,normal.xy)));
-
-    return normal;
 }
 
 float4 ps_main( PS_INPUT input ) : SV_Target
@@ -50,7 +38,7 @@ float4 ps_main( PS_INPUT input ) : SV_Target
     float3 color = textureDiff.Sample(linearSample, input.Tex).xyz;
 	float4 data  = textureNorm.Sample(linearSample, input.Tex).xyzw;
     
-	float3 n = getWorldNormal(data.xyz);
+	float3 n = data.xyz * 2.0f - 1.0f;
     float3 p = getWorldPosition(input.Tex, depth);
     float3 l = normalize ( float3(0.0f, 50.0f, 0.0f) - p );
     float3 v = normalize ( eyePos.xyz - p );

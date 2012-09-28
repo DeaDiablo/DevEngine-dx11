@@ -10,8 +10,8 @@ namespace dev
   #define DEFAULT_PS_FUNCTION     "ps_main"
   #define DEFAULT_SPEED           0.01f
   #define DEFAULT_SENS            0.1f
-  #define DEFAULT_NEAR            0.01f
-  #define DEFAULT_FAR             25000.0f
+  #define DEFAULT_NEAR            1.0f
+  #define DEFAULT_FAR             10000.0f
 
   //passes num
   #define BACKGROUND_PASS_NUM     INT_MAX

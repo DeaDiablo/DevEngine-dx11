@@ -7,14 +7,14 @@
 
 using namespace dev;
 
-Render::Render(int width, int height) :
+Render::Render(int widthWnd, int heightWnd) :
   _renderThread(INVALID_HANDLE_VALUE),
   _stopRender(FALSE),
   _scene(NULL),
   _frame(0)
 {
   _wnd = new Window();
-  _hWnd = _wnd->Create(GetModuleHandle(0), CW_USEDEFAULT, CW_USEDEFAULT, width, height);
+  _hWnd = _wnd->Create(GetModuleHandle(0), CW_USEDEFAULT, CW_USEDEFAULT, widthWnd, heightWnd);
 
   if (!_hWnd)
   {
