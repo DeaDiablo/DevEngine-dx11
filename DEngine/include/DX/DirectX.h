@@ -189,10 +189,36 @@ namespace dev
   //******************SHADERS*******************//
   //********************************************//
   public:
-    VertexShader* GetVertexShader           (const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName);
-    void          RegistrationVertexShader  (VertexShader* vs);
-    PixelShader*  GetPixelShader            (const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName);
-    void          RegistrationPixelShader   (PixelShader* ps);
+    template<class T>
+    T* GetShader (const wchar_t* path, DWORD type, const char* funcName)
+    {
+      UINT hash = getShaderHash(path, type, funcName);
+      ShaderMap::iterator i = _shaders.find(hash);
+      if (i != _shaders.end())
+        return static_cast<T*>((*i).second);
+
+      T* shader = new T(path, type, funcName);
+      if (!shader->CompileShader())
+      {
+        delete shader;
+        return NULL;
+      }
+      _shaders[hash] = shader;
+      return shader;
+    }
+
+    template<class T>
+    void RegistrationShader(T* shader)
+    {
+      UINT hash = getShaderHash(shader->GetPath(), shader->GetType(), shader->GetFuncName());
+      ShaderMap::iterator i = _shaders.find(hash);
+      if (i != _shaders.end())
+        return;
+
+      if (!shader->IsCompiled())
+        shader->CompileShader();
+      _shaders[hash] = shader;
+    }
 
     void          VSSetConstantBuffers(UINT startSlot, UINT num, ID3D11Buffer* const* buffer);
     void          PSSetConstantBuffers(UINT startSlot, UINT num, ID3D11Buffer* const* buffer);
@@ -203,8 +229,7 @@ namespace dev
     void destroyShaderManager ();
     UINT getShaderHash        (const wchar_t* path, DWORD type, const char* funcName);
 
-    ShaderMap _vertexShaders;
-    ShaderMap _pixelShaders;
+    ShaderMap _shaders;
     LayoutMap _layouts;
   //********************************************//
   //**************TEXTURE MANAGER***************//

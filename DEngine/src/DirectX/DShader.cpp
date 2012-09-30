@@ -118,7 +118,7 @@ void Shader::updateNumConstBuffers()
 }
 
 //vertex shader
-VertexShader::VertexShader(const wchar_t* path, TypeVertexShader type, const char* nameFunction) :
+VertexShader::VertexShader(const wchar_t* path, DWORD type, const char* nameFunction) :
   Shader(path, (DWORD)type, nameFunction),
   _shader(NULL),
   _layout(NULL),
@@ -244,7 +244,7 @@ bool VertexShader::CreateLayout(Buffer::BufferType BT_Type)
 
 
 //pixel shader
-PixelShader::PixelShader(const wchar_t* path, TypePixelShader type, const char* nameFunction) :
+PixelShader::PixelShader(const wchar_t* path, DWORD type, const char* nameFunction) :
   Shader(path, (DWORD)type, nameFunction),
   _shader(NULL)
 {
@@ -479,4 +479,79 @@ void PixelShader::updateNumShaderResources()
     if (i == _startSRSlot)
       break;
   }
+}
+
+
+//compute shader
+ComputeShader::ComputeShader(const wchar_t* path, DWORD type, const char* nameFunction) :
+  Shader(path, (DWORD)type, nameFunction),
+  _shader(NULL)
+{
+}
+
+ComputeShader::~ComputeShader()
+{
+  if (_shader)
+  {
+    _shader->Release();
+    _shader = NULL;
+  }
+}
+
+bool ComputeShader::SetShader()
+{
+  if (!_shader)
+    return FALSE;
+
+  DX_CONTEXT.CSSetShader(_shader, NULL, 0);
+
+  return TRUE;
+}
+
+bool ComputeShader::CompileShader()
+{
+  if (!compileShaderFromFile(_path.c_str(), _function.c_str(), getType()))
+    return FALSE;
+
+  HRESULT hr = DX_DEVICE.CreateComputeShader(_blob->GetBufferPointer(), _blob->GetBufferSize(), NULL, &_shader);
+
+  releaseBlob();
+
+  if (FAILED(hr))
+  {
+    WRITE_LOG(L"Pixel shader not created.");
+    return FALSE;
+  }
+
+  _isCompiled = TRUE;
+  return TRUE;
+}
+
+
+const char* ComputeShader::getType()
+{
+  switch(_type)
+  {
+  case CS_4_0:
+    return "cs_4_0";
+  case CS_4_1:
+    return "cs_4_1";
+  case CS_5_0:
+    return "cs_5_0";
+  }
+  return NULL;
+}
+
+bool ComputeShader::supportTypeShader()
+{
+  switch(_type)
+  {
+  case CS_4_0:
+    return DX.GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_0;
+  case CS_4_1:
+    return DX.GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_1;
+  case CS_5_0:
+    return DX.GetFeatureLevel() >= D3D_FEATURE_LEVEL_11_0;
+  }
+  return false;
 }

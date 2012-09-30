@@ -13,11 +13,20 @@ Matrix Scene::_matrix = Matrix::identity();
 Scene::Scene() :
   _cameraActive(NULL)
 {
+  initScene();
 }
 
 Scene::Scene(Camera* camera) :
   _cameraActive(camera)
 {
+  initScene();
+}
+
+void Scene::initScene()
+{
+  _currentVS = NULL;
+  _currentCS = NULL;
+  _currentPS = NULL;
 }
 
 Scene::~Scene()
@@ -85,6 +94,12 @@ void Scene::Draw(bool vSync)
         _currentVS = ds.vs;
     }
 
+    if(_currentCS != ds.cs)
+    {
+      if (ds.cs && ds.cs->SetShader())
+        _currentCS = ds.cs;
+    }
+
     if(_currentPS != ds.ps)
     {
       if (ds.ps && ds.ps->SetShader())
@@ -104,6 +119,7 @@ void Scene::addElementShaderPass(Element* element, const UINT& numPass, const Sh
   newElement.elements.insert(element);
   newElement.orderNum = numPass;
   newElement.vs       = shaderStruct.vs;
+  newElement.cs       = shaderStruct.cs;
   newElement.ps       = shaderStruct.ps;
   for (DrawStructVec::iterator i = _drawVec.begin(); i != _drawVec.end(); ++i)
   {
@@ -120,8 +136,19 @@ void Scene::addElementShaderPass(Element* element, const UINT& numPass, const Sh
             {
               if (ds.vs == newElement.vs)
               {
-                ds.elements.insert(element);
-                continue;
+                if (ds.cs <= newElement.cs)
+                {
+                  if (ds.cs == newElement.cs)
+                  {
+                    ds.elements.insert(element);
+                    continue;
+                  }
+                  else
+                  {
+                    _drawVec.insert(i, newElement);
+                    return;
+                  }
+                }
               }
               else
               {
@@ -160,3 +187,4 @@ void Scene::removeElementShaderPass(Element* element, const UINT& numPass, const
     }
   }
 }
+

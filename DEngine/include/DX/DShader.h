@@ -9,6 +9,7 @@ namespace dev
 {
   class VertexShader;
   class PixelShader;
+  class ComputeShader;
 
   class Shader
   {
@@ -46,6 +47,11 @@ namespace dev
     virtual PixelShader* AsPixelShader() 
     { 
       return NULL; 
+    }
+
+    virtual ComputeShader* AsComputeShader()
+    {
+      return NULL;
     }
 
     void Release()
@@ -107,7 +113,7 @@ namespace dev
       VS_5_0
     };
 
-    VertexShader(const wchar_t* path, TypeVertexShader type = VS_4_0, const char* nameFunction = DEFAULT_VS_FUNCTION);
+    VertexShader(const wchar_t* path, DWORD type = VS_4_0, const char* nameFunction = DEFAULT_VS_FUNCTION);
     virtual ~VertexShader();
 
     virtual bool CompileShader();
@@ -152,7 +158,7 @@ namespace dev
       PS_5_0
     };
 
-    PixelShader(const wchar_t* path, TypePixelShader type = PS_4_0, const char* nameFunction = DEFAULT_PS_FUNCTION);
+    PixelShader(const wchar_t* path, DWORD type = PS_4_0, const char* nameFunction = DEFAULT_PS_FUNCTION);
     virtual ~PixelShader();
 
     virtual bool CompileShader();
@@ -192,11 +198,41 @@ namespace dev
     UINT _startSRSlot, _numSRSlot;
   };
 
+  class ComputeShader : public Shader
+  {
+  public:
+
+    enum TypeComputeShader
+    {
+      CS_4_0,
+      CS_4_1,
+      CS_5_0
+    };
+
+    ComputeShader(const wchar_t* path, DWORD type = CS_5_0, const char* nameFunction = DEFAULT_CS_FUNCTION);
+    virtual ~ComputeShader();
+
+    virtual bool CompileShader();
+    virtual bool SetShader();
+
+    virtual ComputeShader* AsComputeShader() 
+    { 
+      return this; 
+    }
+
+  protected:
+    virtual const char* getType();
+    virtual bool supportTypeShader();
+
+    ID3D11ComputeShader* _shader;
+  };
+
   struct ShaderStruct
   {
-    ShaderStruct() : vs(NULL), ps(NULL) {}
-    VertexShader* vs;
-    PixelShader*  ps;
+    ShaderStruct() : vs(NULL), ps(NULL), cs(NULL) {}
+    VertexShader*  vs;
+    ComputeShader* cs;
+    PixelShader*   ps;
   };
 }
 

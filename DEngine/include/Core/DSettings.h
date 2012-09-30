@@ -7,6 +7,7 @@ namespace dev
 
   #define DEFAULT_LOG_FILE        L"DEngine.log"
   #define DEFAULT_VS_FUNCTION     "vs_main"
+  #define DEFAULT_CS_FUNCTION     "cs_main"
   #define DEFAULT_PS_FUNCTION     "ps_main"
   #define DEFAULT_SPEED           0.01f
   #define DEFAULT_SENS            0.1f

@@ -82,9 +82,11 @@ namespace dev
 
     virtual void SetVertexShader(UINT passNum, const wchar_t* path, VertexShader::TypeVertexShader type = VertexShader::VS_4_0, const char* funcName = DEFAULT_VS_FUNCTION);
     virtual void SetVertexShader(UINT passNum, VertexShader* vs);
+    virtual void SetComputeShader(UINT passNum, const wchar_t* path, ComputeShader::TypeComputeShader type = ComputeShader::CS_5_0, const char* funcName = DEFAULT_CS_FUNCTION);
+    virtual void SetComputeShader(UINT passNum, ComputeShader* cs);
     virtual void SetPixelShader(UINT passNum, const wchar_t* path, PixelShader::TypePixelShader type = PixelShader::PS_4_0, const char* funcName = DEFAULT_PS_FUNCTION);
     virtual void SetPixelShader(UINT passNum, PixelShader* ps);
-    virtual void SetShaders(UINT passNum, VertexShader* vs, PixelShader* ps);
+    virtual void SetShaders(UINT passNum, VertexShader* vs, PixelShader* ps, ComputeShader* cs = NULL);
 
     Buffer::BufferType GetBufferType() const
     {
@@ -107,6 +109,13 @@ namespace dev
         return _shaderPasses[passNum].vs; 
       return NULL;
     }
+    
+    inline ComputeShader* GetComputeShader(UINT passNum) 
+    { 
+      if (_shaderPasses.find(passNum) != _shaderPasses.end())
+        return _shaderPasses[passNum].cs; 
+      return NULL;
+    }
 
     inline PixelShader* GetPixelShader(UINT passNum) 
     { 
@@ -125,6 +134,7 @@ namespace dev
     ShaderPassMap _shaderPasses;
 
     virtual void setVertexShader(UINT passNum, VertexShader* vs);
+    virtual void setComputeShader(UINT passNum, ComputeShader* cs);
     virtual void setPixelShader(UINT passNum, PixelShader* ps);
 
     void setParent(Element* parent);

@@ -91,12 +91,13 @@ void Element::clearParent()
 
 void Element::SetVertexShader(UINT passNum, const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName)
 {
-  setVertexShader(passNum, DX.GetVertexShader(path, type, funcName));
+  setVertexShader(passNum, DX.GetShader<VertexShader>(path, type, funcName));
 }
 
 void Element::SetVertexShader(UINT passNum, VertexShader* vs)
 {
-  DX.RegistrationVertexShader(vs);
+  if (vs)
+    DX.RegistrationShader(vs);
   setVertexShader(passNum, vs);
 }
 
@@ -124,14 +125,45 @@ void Element::setVertexShader(UINT passNum, VertexShader* vs)
   }
 }
 
+void Element::SetComputeShader(UINT passNum, const wchar_t* path, ComputeShader::TypeComputeShader type, const char* funcName)
+{
+  setComputeShader(passNum, DX.GetShader<ComputeShader>(path, (DWORD)type, funcName));
+}
+
+void Element::SetComputeShader(UINT passNum, ComputeShader* cs)
+{
+  if (cs)
+    DX.RegistrationShader(cs);
+  setComputeShader(passNum, cs);
+}
+
+void Element::setComputeShader(UINT passNum, ComputeShader* cs)
+{
+  if (_shaderPasses.find(passNum) == _shaderPasses.end())
+    _shaderPasses[passNum] = ShaderStruct();
+
+  ShaderStruct& ss = _shaderPasses[passNum];
+  if(ss.cs != cs)
+  {
+    if(_scene)
+      _scene->removeElementShaderPass(this, passNum, ss);
+
+    ss.cs = cs;
+
+    if (_scene)
+      _scene->addElementShaderPass(this, passNum, ss);
+  }
+}
+
 void Element::SetPixelShader(UINT passNum, const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName)
 {
-  setPixelShader(passNum, DX.GetPixelShader(path, type, funcName));
+  setPixelShader(passNum, DX.GetShader<PixelShader>(path, (DWORD)type, funcName));
 }
 
 void Element::SetPixelShader(UINT passNum, PixelShader* ps)
 {
-  DX.RegistrationPixelShader(ps);
+  if (ps)
+    DX.RegistrationShader(ps);
   setPixelShader(passNum, ps);
 }
 
@@ -153,9 +185,10 @@ void Element::setPixelShader(UINT passNum, PixelShader* ps)
   }
 }
 
-void Element::SetShaders(UINT passNum, VertexShader* vs, PixelShader* ps)
+void Element::SetShaders(UINT passNum, VertexShader* vs, PixelShader* ps, ComputeShader* cs)
 {
   SetVertexShader(passNum, vs);
+  SetComputeShader(passNum, cs);
   SetPixelShader(passNum, ps);
 }
 

@@ -527,66 +527,6 @@ void DirectX::Present(bool vSync)
 //********************************************************************************************************************//
 //**************************************************SHADERS***********************************************************//
 //********************************************************************************************************************//
-VertexShader* DirectX::GetVertexShader(const wchar_t* path, VertexShader::TypeVertexShader type, const char* funcName)
-{
-  UINT hash = getShaderHash(path, type, funcName);
-  ShaderMap::iterator i = _vertexShaders.find(hash);
-  if (i != _vertexShaders.end())
-    return (*i).second->AsVertexShader();
-
-  VertexShader* shader = new VertexShader(path, type, funcName);
-  if (!shader->CompileShader())
-  {
-    delete shader;
-    return NULL;
-  }
-  _vertexShaders[hash] = shader;
-  return shader;
-}
-
-void DirectX::RegistrationVertexShader(VertexShader* vs)
-{
-  UINT hash = getShaderHash(vs->GetPath(), vs->GetType(), vs->GetFuncName());
-  ShaderMap::iterator i = _vertexShaders.find(hash);
-  if (i != _vertexShaders.end())
-    return;
-
-  if (!vs->IsCompiled())
-    vs->CompileShader();
-  _vertexShaders[hash] = vs;
-  return;
-}
-
-PixelShader* DirectX::GetPixelShader(const wchar_t* path, PixelShader::TypePixelShader type, const char* funcName)
-{
-  UINT hash = getShaderHash(path, type, funcName);
-  ShaderMap::iterator i = _pixelShaders.find(hash);
-  if (i != _pixelShaders.end())
-    return (*i).second->AsPixelShader();
-
-  PixelShader* shader = new PixelShader(path, type, funcName);
-  if (!shader->CompileShader())
-  {
-    delete shader;
-    return NULL;
-  }
-  _pixelShaders[hash] = shader;
-  return shader;
-}
-
-void DirectX::RegistrationPixelShader(PixelShader* ps)
-{
-  UINT hash = getShaderHash(ps->GetPath(), ps->GetType(), ps->GetFuncName());
-  ShaderMap::iterator i = _pixelShaders.find(hash);
-  if (i != _pixelShaders.end())
-    return;
-
-  if (!ps->IsCompiled())
-    ps->CompileShader();
-  _pixelShaders[hash] = ps;
-  return;
-}
-
 void DirectX::VSSetConstantBuffers(UINT startSlot, UINT num, ID3D11Buffer* const* buffer)
 {
   _dxDeviceContext->VSSetConstantBuffers(startSlot, num, buffer);
@@ -599,14 +539,10 @@ void DirectX::PSSetConstantBuffers(UINT startSlot, UINT num, ID3D11Buffer* const
 
 void DirectX::destroyShaderManager()
 {
-  for(ShaderMap::iterator i = _vertexShaders.begin(); i != _vertexShaders.end(); ++i)
+  for(ShaderMap::iterator i = _shaders.begin(); i != _shaders.end(); ++i)
     delete (*i).second;
 
-  for(ShaderMap::iterator i = _pixelShaders.begin(); i != _pixelShaders.end(); ++i)
-    delete (*i).second;
-
-  _vertexShaders.clear();
-  _pixelShaders.clear();
+  _shaders.clear();
 }
 
 UINT DirectX::getShaderHash(const wchar_t* path, DWORD type, const char* funcName)

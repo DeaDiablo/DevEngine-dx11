@@ -227,12 +227,7 @@ void Render::UnregisterOutputClass(OutputClass* outputClass)
   _cs.UnLock();
 }
 
-void Render::RegisterVS(VertexShader* vs)
+void Render::RegisterShader(Shader* shader)
 {
-  DX.RegistrationVertexShader(vs);
-}
-
-void Render::RegisterPS(PixelShader* ps)
-{
-  DX.RegistrationPixelShader(ps);
+  DX.RegistrationShader(shader);
 }

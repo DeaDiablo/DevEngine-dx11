@@ -26,6 +26,7 @@ namespace dev
     virtual void Draw(bool vSync);
 
   protected:
+    void initScene();
     void addElementShaderPass(Element* element, const UINT& numPass, const ShaderStruct& shaderStruct);
     void removeElementShaderPass(Element* element, const UINT& numPass, const ShaderStruct& shaderStruct);
     Camera* _cameraActive;
@@ -33,15 +34,17 @@ namespace dev
     Elements::Set  _listUpdate, _listElements;
     static Matrix _matrix;
 
-    VertexShader* _currentVS;
-    PixelShader*  _currentPS;
+    VertexShader*   _currentVS;
+    ComputeShader*  _currentCS;
+    PixelShader*    _currentPS;
 
     struct DrawStruct
     {
-      Elements::Set elements;
-      UINT          orderNum;
-      VertexShader* vs;
-      PixelShader*  ps;
+      Elements::Set   elements;
+      UINT            orderNum;
+      VertexShader*   vs;
+      ComputeShader*  cs;
+      PixelShader*    ps;
     };
     typedef std::vector<DrawStruct> DrawStructVec;
     DrawStructVec _drawVec;
